@@ -41,7 +41,8 @@
 
 
 /****************************** VARIABLES *************************************/
-const uint8_t rxWindowSize[] =  {8, 10, 14, 26, 49, 88, 60, 8};
+//const uint8_t rxWindowSize[] =  {8, 10, 14, 26, 49, 88, 60, 8};
+const uint8_t rxWindowSize[] =  {32, 40, 56, 104, 196, 352, 240, 32};
 
 // Max Payload Size 
 const uint8_t maxPayloadSize[8] = {51, 51, 51, 115, 242, 242, 242, 56}; // for FSK max message size should be 64 bytes
@@ -49,7 +50,8 @@ const uint8_t maxPayloadSize[8] = {51, 51, 51, 115, 242, 242, 242, 56}; // for F
 // Channels by ism band
 ChannelParams_t Channels[MAX_RU_SINGLE_BAND_CHANNELS];
 
-const int8_t rxWindowOffset[] = {-33, -50, -58, -62, -66, -68, -15, -2};
+//const int8_t rxWindowOffset[] = {-33, -50, -58, -62, -66, -68, -15, -2};
+const int8_t rxWindowOffset[] = {-66, -100, -116, -124, -132, -136, -30, -4};
 
 // Tx power possibilities by ism band
 static const int8_t txPower868[] = {20, 14, 11, 8, 5, 2};
@@ -269,9 +271,6 @@ void LORAWAN_Reset (IsmBand_t ismBandNew)
     else loRa.currentDataRate=6;
 	
     UpdateMinMaxChDataRate ();
-    send_chars("reset - lora.currentdatarate=");
-    send_chars(ui8toa(loRa.currentDataRate,b));
-    send_chars("\r\n");
 
     //keys will be filled with 0
     loRa.macKeys.value = 0;  //no keys are set
@@ -429,39 +428,40 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
         uint8_t i;
         uint32_t delta = 0, minim = UINT32_MAX, ticks;       
 
+        i = loRa.lastUsedChannelIndex;    
         if(mode==MODE_DEVICE)
         {
             //This flag is used when the reception in RX1 is overlapping the opening of RX2
             loRa.rx2DelayExpired = 0;
             loRa.macStatus.macState = BEFORE_RX1;
-        }
-        if(mode==MODE_NETWORK_SERVER)
-        {
-            loRa.macStatus.macState = IDLE;
-        }
+        
 
-        i = loRa.lastUsedChannelIndex;    
 
-        // the join request should never exceed 0.1%
-        if (loRa.lorawanMacStatus.joining == 1)
-        {           
-            SwTimerSetTimeout(loRa.joinAccept1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
-            SwTimerSetTimeout(loRa.joinAccept2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay2 + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
-            SwTimerStart(loRa.joinAccept1TimerId);
-            SwTimerStart(loRa.joinAccept2TimerId);
+            // the join request should never exceed 0.1%
+            if (loRa.lorawanMacStatus.joining == 1)
+            {           
+                SwTimerSetTimeout(loRa.joinAccept1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
+                SwTimerSetTimeout(loRa.joinAccept2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay2 + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
+                SwTimerStart(loRa.joinAccept1TimerId);
+                SwTimerStart(loRa.joinAccept2TimerId);
 
-            Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)DUTY_CYCLE_JOIN_REQUEST + 1) * ((uint32_t)loRa.prescaler) - 1); 
-        }
-        else
-        {
-            SwTimerSetTimeout(loRa.receiveWindow1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
-            SwTimerSetTimeout(loRa.receiveWindow2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay2 + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
-            SwTimerStart(loRa.receiveWindow1TimerId);
-            if (CLASS_A == loRa.deviceClass)
-            {
-                SwTimerStart(loRa.receiveWindow2TimerId);
+                Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)DUTY_CYCLE_JOIN_REQUEST + 1) * ((uint32_t)loRa.prescaler) - 1); 
             }
-            
+            else
+            {
+                SwTimerSetTimeout(loRa.receiveWindow1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
+                SwTimerSetTimeout(loRa.receiveWindow2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay2 + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
+                SwTimerStart(loRa.receiveWindow1TimerId);
+                if (CLASS_A == loRa.deviceClass)
+                {
+                    SwTimerStart(loRa.receiveWindow2TimerId);
+                }
+
+                Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)Channels[i].dutyCycle + 1) * ((uint32_t)loRa.prescaler) - 1);
+            }
+        }
+        else if(mode==MODE_NETWORK_SERVER)
+        {
             Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)Channels[i].dutyCycle + 1) * ((uint32_t)loRa.prescaler) - 1);
         }
 
@@ -526,6 +526,10 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
     send_chars("Transmission OK timeOnAir=");
     send_chars(ui32toa((uint32_t)timeOnAir,b));
     send_chars("\r\n");
+    if(mode==MODE_NETWORK_SERVER)
+    {
+        loRa.macStatus.macState = IDLE;
+    }
 }
 
 
@@ -1322,6 +1326,7 @@ static void DutyCycleCallback (uint8_t param)
     bool found = false;
     uint8_t i;
 
+    send_chars("DCC\r\n");
     for (i=0; i < MAX_EU_SINGLE_BAND_CHANNELS; i++)
     {
         //Validate this only for enabled channels

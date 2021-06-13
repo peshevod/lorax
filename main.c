@@ -391,7 +391,7 @@ void main(void)
                 // Application management
                 if(readAndSendFlag == true)
                 {
-                    LoRaWakeUp();
+//                   LoRaWakeUp();
                     insleep=0;
                     readAndSend();
                     readAndSendFlag = false;
@@ -403,13 +403,13 @@ void main(void)
                 send_chars(ui8tox(NCO1ACCL,b));
                 send_chars("\r\n");*/
                 // "Idle" --> go to Sleep
-                if(LoRa_CanSleep())
+/*                if(LoRa_CanSleep())
                 {
 //                    send_chars("to sleep\r\n");
                     LoRaSleep();
                     insleep=1;
                     SLEEP();
-                }
+                }*/
             }
             break;
         case MODE_NETWORK_SERVER:
@@ -438,13 +438,13 @@ void main(void)
                     LORAWAN_Receive();
                 }
     
-                if(LoRa_CanSleep())
-                {
+//                if(LoRa_CanSleep())
+//                {
 //                    send_chars("to sleep\r\n");
-                    LoRaSleep();
-                    insleep=1;
-                    SLEEP();
-                }
+//                    LoRaSleep();
+//                    insleep=1;
+//                    SLEEP();
+//                }
             }
             break;
     }
@@ -608,7 +608,7 @@ void readAndSend(void)
 //    if(err!=OK) print_error(err);
 //    err=LORAWAN_SetTxPower (5);
 //    if(err!=OK) print_error(err);
-    err=LORAWAN_Send(UNCNF, 2, send_array, 8);
+    err=LORAWAN_Send(CNF, 2, send_array, 8);
     if(err!=OK) print_error(err);
     num++;
 }

@@ -862,7 +862,7 @@ RadioError_t RADIO_Transmit(uint8_t *buffer, uint8_t bufferLen)
     // Setting it to 4 is a valid option.
     RADIO_WriteConfiguration(4);
 
-    send_chars("F=");
+    send_chars("Transmit F=");
     send_chars(ui32toa(RadioConfiguration.frequency,b));
     send_chars(" dataRate=");
     send_chars(ui8toa(RadioConfiguration.dataRate,b));
@@ -981,15 +981,15 @@ RadioError_t RADIO_ReceiveStart(uint16_t rxWindowSize)
 
     // Will use non blocking switches to RadioSetMode. We don't really care
     // when it starts receiving.
+    send_chars("Receiving start...");
+    send_chars("F=");
+    send_chars(ui32toa(RadioConfiguration.frequency,b));
+    send_chars(" sf=");
+    send_chars(ui8toa(RadioConfiguration.dataRate,b));
+    send_chars("\r\n");
     if (0 == rxWindowSize)
     {
         RADIO_WriteMode(MODE_RXCONT, RadioConfiguration.modulation, 0);
-        send_chars("Waiting start...");
-        send_chars("F=");
-        send_chars(ui32toa(RadioConfiguration.frequency,b));
-        send_chars(" sf=");
-        send_chars(ui8toa(RadioConfiguration.dataRate,b));
-        send_chars("\r\n");
     }
     else
     {
@@ -1027,7 +1027,6 @@ void RADIO_ReceiveStop(void)
 static void RADIO_RxDone(void)
 {
     uint8_t i, irqFlags;
-    send_chars("RX_DONE!\r\n");
     irqFlags = RADIO_RegisterRead(REG_LORA_IRQFLAGS);
     // Clear RxDone interrupt (also CRC error and ValidHeader interrupts, if
     // they exist)
@@ -1165,9 +1164,9 @@ static void RADIO_TxDone(void)
     {
         timeOnAir = TIME_ON_AIR_LOAD_VALUE - TICKS_TO_MS(SwTimerReadValue(RadioConfiguration.timeOnAirTimerId));
         if(mode==MODE_DEVICE) LORAWAN_TxDone((uint16_t)timeOnAir);
-        if(mode==MODE_NETWORK_SERVER)
+        else if(mode==MODE_NETWORK_SERVER)
         {
-            RADIO_ReceiveStart(0);
+//            RADIO_ReceiveStart(0);
             LORAWAN_TxDone((uint16_t)timeOnAir);
         }
         else LORAX_TxDone((uint16_t)timeOnAir,0);

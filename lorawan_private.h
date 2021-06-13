@@ -130,6 +130,7 @@ typedef enum
     ABP_DELAY                   ,         //used for delaying in calling the join callback for ABP
     CLASS_C_RX2_1_OPEN          ,
     CLASS_C_RX2_2_OPEN          ,
+    BEFORE_ACK                  ,
 } LoRaMacState_t;   
 
 // types of frames
