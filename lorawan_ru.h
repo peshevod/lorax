@@ -65,7 +65,7 @@ extern "C" {
 #define LC2_868                   {868500000, ENABLED,  { ( ( DR5 << SHIFT4 ) | DR0 ) },   99, 0, 1, 0xFF}
 #define LC3_868                   {868700000, ENABLED,  { ( ( DR5 << SHIFT4 ) | DR0 ) },   99, 0, 1, 0xFF}
 #define LC4_868                   {868900000, ENABLED,  { ( ( DR5 << SHIFT4 ) | DR0 ) },   99, 0, 1, 0xFF}
-#define LC4_RU864                 {868900000, ENABLED,  { ( ( DR5 << SHIFT4 ) | DR0 ) },   302, 0, 1, 0xFF}
+//#define LC4_RU864                 {868900000, ENABLED,  { ( ( DR5 << SHIFT4 ) | DR0 ) },   302, 0, 1, 0xFF}
 #define LC5_868                   {869100000, ENABLED,  { ( ( DR5 << SHIFT4 ) | DR0 ) },   302, 0, 1, 0xFF}
 
 //RU channels for 868 Mhz

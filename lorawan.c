@@ -37,6 +37,7 @@
 #include "interrupt_manager_lora_addons.h"
 #include <math.h>
 #include "lorawan_ru.h"
+#include "shell.h"
 
 /****************************** VARIABLES *************************************/
 
@@ -60,6 +61,10 @@ RxAppData_t rxPayload;
 extern const uint8_t maxPayloadSize[];
 extern ChannelParams_t Channels[];
 extern const uint8_t rxWindowSize[];
+extern const int8_t rxWindowOffset[];
+extern uint8_t mode;
+extern uint8_t b[128];
+
 
 /************************ FUNCTION PROTOTYPES *************************/
 
@@ -237,7 +242,7 @@ LorawanError_t LORAWAN_Send (TransmissionType_t confirmed, uint8_t port,  void *
         
         AssemblePacket (confirmed, port, buffer, bufferLength);
 
-        if (RADIO_Transmit (&macBuffer[16], loRa.lastPacketLength) == OK)
+        if (RADIO_Transmit (&macBuffer[16], (uint8_t)loRa.lastPacketLength) == OK)
         {
             loRa.fCntUp.value ++;   // the uplink frame counter increments for every new transmission (it does not increment for a retransmission)
 
@@ -823,6 +828,22 @@ void LORAWAN_ReceiveWindow1Callback (uint8_t param)
     }
 }
 
+void LORAWAN_Receive(void)
+{
+    uint8_t i;
+    RADIO_SetWatchdogTimeout(0);
+    set_s("CHANNEL",&i);
+    if(mode!=MODE_REC && i!=0xFF)
+    {
+//        send_chars("lora.currentdatarate=");
+//        send_chars(ui8toa(loRa.currentDataRate,b));
+//        send_chars("\r\n");
+        ConfigureRadio(loRa.currentDataRate, Channels[i].frequency);
+    }
+    RADIO_ReceiveStart(0);
+
+}
+
 void LORAWAN_SendDownAckCallback (uint8_t param)
 {
     uint32_t freq;
@@ -831,6 +852,7 @@ void LORAWAN_SendDownAckCallback (uint8_t param)
     {
         AssemblePacket (0, 0, 0, 0);
 
+        RADIO_SetWatchdogTimeout(5000);
         if (RADIO_Transmit (&macBuffer[16], loRa.lastPacketLength) == OK)
         {
             loRa.fCntDown.value ++;   // the uplink frame counter increments for every new transmission (it does not increment for a retransmission)
@@ -839,7 +861,7 @@ void LORAWAN_SendDownAckCallback (uint8_t param)
         }
         else
         {
-            return MAC_STATE_NOT_READY_FOR_TRANSMISSION;
+            loRa.macStatus.macState = MAC_STATE_NOT_READY_FOR_TRANSMISSION;
         }
     }
 }
@@ -2105,7 +2127,7 @@ static bool FindSmallestDataRate (void)
     uint8_t  i = 0, dataRate;
     bool found = false;
 
-    if (loRa.currentDataRate > loRa.minDataRate)
+    if ((loRa.currentDataRate > loRa.minDataRate) && !(mode==MODE_SEND || mode==MODE_REC || mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER))
     {
         dataRate = loRa.currentDataRate - 1;
 

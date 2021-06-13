@@ -49,7 +49,7 @@ const uint8_t maxPayloadSize[8] = {51, 51, 51, 115, 242, 242, 242, 56}; // for F
 // Channels by ism band
 ChannelParams_t Channels[MAX_RU_SINGLE_BAND_CHANNELS];
 
-static const int8_t rxWindowOffset[] = {-33, -50, -58, -62, -66, -68, -15, -2};
+const int8_t rxWindowOffset[] = {-33, -50, -58, -62, -66, -68, -15, -2};
 
 // Tx power possibilities by ism band
 static const int8_t txPower868[] = {20, 14, 11, 8, 5, 2};
@@ -103,6 +103,7 @@ LC2_433,
 static const uint8_t FskSyncWordBuff[3] = {0xC1, 0x94, 0xC1};
 
 extern char b[128];
+extern uint8_t mode;
 
 
 /************************ PRIVATE FUNCTION PROTOTYPES *************************/
@@ -268,6 +269,9 @@ void LORAWAN_Reset (IsmBand_t ismBandNew)
     else loRa.currentDataRate=6;
 	
     UpdateMinMaxChDataRate ();
+    send_chars("reset - lora.currentdatarate=");
+    send_chars(ui8toa(loRa.currentDataRate,b));
+    send_chars("\r\n");
 
     //keys will be filled with 0
     loRa.macKeys.value = 0;  //no keys are set
@@ -425,10 +429,16 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
         uint8_t i;
         uint32_t delta = 0, minim = UINT32_MAX, ticks;       
 
-        //This flag is used when the reception in RX1 is overlapping the opening of RX2
-        loRa.rx2DelayExpired = 0;
-
-        loRa.macStatus.macState = BEFORE_RX1;
+        if(mode==MODE_DEVICE)
+        {
+            //This flag is used when the reception in RX1 is overlapping the opening of RX2
+            loRa.rx2DelayExpired = 0;
+            loRa.macStatus.macState = BEFORE_RX1;
+        }
+        if(mode==MODE_NETWORK_SERVER)
+        {
+            loRa.macStatus.macState = IDLE;
+        }
 
         i = loRa.lastUsedChannelIndex;    
 
@@ -517,21 +527,6 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
     send_chars(ui32toa((uint32_t)timeOnAir,b));
     send_chars("\r\n");
 }
-
-void LORAWAN_NSTxDone(uint16_t timeOnAir)
-{
-        uint32_t delta = 0, minim = UINT32_MAX, ticks;       
-    if (loRa.macStatus.macPause == DISABLED)
-    {
-        loRa.macStatus.macState = IDLE;
-        if(SwTimerIsRunning(loRa.dutyCycleTimerId))
-        {
-            SwTimerStop(loRa.dutyCycleTimerId);
-
-            ticks = SwTimerReadValue (loRa.dutyCycleTimerId);
-            delta = loRa.lastTimerValue - TICKS_TO_MS(ticks);
-        }
-
 
 
 // this function is called by the radio when the first or the second receive window expired without receiving any message (either for join accept or for message)

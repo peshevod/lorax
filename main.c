@@ -119,7 +119,6 @@ char* errors[] = {
 
 void LORAX_TxDone(uint16_t timeOnAir, uint8_t was_timeout)
 {
-    V1_SetHigh();        
     if(!was_timeout)
     {
         send_chars("Packet send. Air time=");
@@ -227,8 +226,6 @@ void Transmit_array(void)
     ((uint32_t*)send_array)[1]=num;
     send_array[8]=rep;
     RADIO_SetWatchdogTimeout(3000);
-    if(RADIO_GetPABoost()) V1_SetLow();
-    else V1_SetHigh();
     print_array(send_array);
     radio_err=RADIO_Transmit(send_array, 16);   
 }
@@ -330,9 +327,8 @@ void main(void)
             while(1)
             {
                 rx_done=0;
-                V1_SetHigh();
-                radio_err=RADIO_ReceiveStart(0);
-                send_chars("Receive started\r\n");
+                LORAWAN_Receive();
+//                send_chars("Receive started\r\n");
                 while(!rx_done)
                 {
                     LORAWAN_Mainloop ();
@@ -436,6 +432,11 @@ void main(void)
             {   
                 // Stack management
                 LORAWAN_Mainloop();
+                
+                if(LORAWAN_GetState() == IDLE)
+                {
+                    LORAWAN_Receive();
+                }
     
                 if(LoRa_CanSleep())
                 {
@@ -555,15 +556,15 @@ uint8_t LoRa_CanSleep(void)
 void LoRaSleep (void) 
 {
     // SSP1EN disabled;
-    SPI1_Close();
-    SPI1CON0bits.EN=0;
+//    SPI1_Close();
+//    SPI1CON0bits.EN=0;
     
     //Disable SPI1 module
-    PMD5bits.SPI1MD = 1;
+//    PMD5bits.SPI1MD = 1;
     
     //Disable UART1
-    U1CON1bits.ON=0;
-    U1MD=1;
+//    U1CON1bits.ON=0;
+//    U1MD=1;
     
     //Make sure SPI1 pins are not left in floating state during sleep
     //NCS
@@ -589,11 +590,11 @@ void LoRaSleep (void)
 
 void LoRaWakeUp(void) 
 {   
-    PMD5bits.SPI1MD = 0;
-    SPI_Initialize();
-    SPI_Open(SPI_DEFAULT);
-    U1MD=0;
-    UART1_Initialize();
+//    PMD5bits.SPI1MD = 0;
+//    SPI_Initialize();
+//    SPI_Open(SPI_DEFAULT);
+//    U1MD=0;
+//    UART1_Initialize();
 }
 
 void readAndSend(void)
@@ -601,12 +602,13 @@ void readAndSend(void)
     ((uint32_t*)send_array)[0]=uid;
     ((uint32_t*)send_array)[1]=num;
     print_array(send_array);
+    LorawanError_t err;
     //send with LORA
 //    LorawanError_t err=LORAWAN_SetCurrentDataRate (datarate);
 //    if(err!=OK) print_error(err);
 //    err=LORAWAN_SetTxPower (5);
 //    if(err!=OK) print_error(err);
-    LorawanError_t err=LORAWAN_Send(UNCNF, 2, send_array, 8);
+    err=LORAWAN_Send(UNCNF, 2, send_array, 8);
     if(err!=OK) print_error(err);
     num++;
 }

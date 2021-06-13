@@ -215,7 +215,7 @@ static unsigned char _rcon;
 
 /****************************** Macros ******************************/
 #define xtime(a) (((a)<0x80)?(a)<<1:(((a)<<1)^0x1b) )
-/* if(a<0x80){a<<=1;}else{a=(a<<1)^0x1b;}
+// if(a<0x80){a<<=1;}else{a=(a<<1)^0x1b;}
 
 /****************************** Function Prototypes *****************/
 void EncodeShiftRow(unsigned char* block);

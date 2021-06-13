@@ -1531,6 +1531,9 @@ void LORAWAN_Mainloop (void);
 
 void print_error(LorawanError_t err);
 
+void LORAWAN_SendDownAckCallback (uint8_t param);
+void LORAWAN_Receive(void);
+
 #ifdef	__cplusplus
 }
 #endif

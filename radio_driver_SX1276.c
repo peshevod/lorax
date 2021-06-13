@@ -476,6 +476,7 @@ void RADIO_Init(uint8_t *radioBuffer, uint32_t frequency)
     set_s("HEADER_MODE",&RadioConfiguration.implicitHeaderMode); // = 0;
     set_s("PREAMBLE_LEN",&tmp32);
     RadioConfiguration.preambleLen=(uint16_t)tmp32; // = 8;
+    set_s("SF",&spread_factor);
     RadioConfiguration.dataRate=spread_factor; // = SF_12;
     set_s("CRC",&RadioConfiguration.crcOn); // = 1;
     set_s("BOOST",&RadioConfiguration.paBoost); // = 0;
@@ -852,11 +853,20 @@ RadioError_t RADIO_Transmit(uint8_t *buffer, uint8_t bufferLen)
         return ERR_DATA_SIZE;
     }
 
+    if(RADIO_GetPABoost()) V1_SetLow();
+    else V1_SetHigh();
+    
     SwTimerStop(RadioConfiguration.timeOnAirTimerId);
 
     // Since we're interested in a transmission, rxWindowSize is irrelevant.
     // Setting it to 4 is a valid option.
     RADIO_WriteConfiguration(4);
+
+    send_chars("F=");
+    send_chars(ui32toa(RadioConfiguration.frequency,b));
+    send_chars(" dataRate=");
+    send_chars(ui8toa(RadioConfiguration.dataRate,b));
+    send_chars("\r\n");
 
     if (MODULATION_LORA == RadioConfiguration.modulation)
     {
@@ -942,6 +952,7 @@ RadioError_t RADIO_ReceiveStart(uint16_t rxWindowSize)
         RADIO_WriteConfiguration(rxWindowSize);
     }
 
+    V1_SetHigh();
     if (MODULATION_LORA == RadioConfiguration.modulation)
     {
         // All LoRa packets are received with explicit header, so this register
@@ -973,6 +984,12 @@ RadioError_t RADIO_ReceiveStart(uint16_t rxWindowSize)
     if (0 == rxWindowSize)
     {
         RADIO_WriteMode(MODE_RXCONT, RadioConfiguration.modulation, 0);
+        send_chars("Waiting start...");
+        send_chars("F=");
+        send_chars(ui32toa(RadioConfiguration.frequency,b));
+        send_chars(" sf=");
+        send_chars(ui8toa(RadioConfiguration.dataRate,b));
+        send_chars("\r\n");
     }
     else
     {
@@ -1010,12 +1027,14 @@ void RADIO_ReceiveStop(void)
 static void RADIO_RxDone(void)
 {
     uint8_t i, irqFlags;
+    send_chars("RX_DONE!\r\n");
     irqFlags = RADIO_RegisterRead(REG_LORA_IRQFLAGS);
     // Clear RxDone interrupt (also CRC error and ValidHeader interrupts, if
     // they exist)
     RADIO_RegisterWrite(REG_LORA_IRQFLAGS, (1<<SHIFT6) | (1<<SHIFT5) | (1<<SHIFT4));
     if (((1<<SHIFT6) | (1<<SHIFT4)) == (irqFlags & ((1<<SHIFT6) | (1<<SHIFT4))))
     {
+        send_chars("Received!\r\n");
         // Make sure the watchdog won't trigger MAC functions erroneously.
         SwTimerStop(RadioConfiguration.watchdogTimerId);
         
@@ -1127,14 +1146,17 @@ static void RADIO_RxTimeout(void)
     RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
     RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
 
-    if(mode==MODE_DEVICE) LORAWAN_RxTimeout();
-    else LORAX_RxTimeout();
+    send_chars("RX Timeout\r\n");
+    if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxTimeout();
+    else
+        LORAX_RxTimeout();
 }
 
 static void RADIO_TxDone(void)
 {
     uint32_t timeOnAir;
     // Make sure the watchdog won't trigger MAC functions erroneously.
+    V1_SetHigh();        
     SwTimerStop(RadioConfiguration.watchdogTimerId);
     RADIO_RegisterWrite(REG_LORA_IRQFLAGS, 1<<SHIFT3);
     RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
@@ -1157,6 +1179,7 @@ static void RADIO_FSKPacketSent(void)
     uint8_t irqFlags;
     uint32_t timeOnAir;
 
+    V1_SetHigh();        
     irqFlags = RADIO_RegisterRead(REG_FSK_IRQFLAGS2);
     if ((1<<SHIFT3) == (irqFlags & (1<<SHIFT3)))
     {
@@ -1478,7 +1501,8 @@ static void RADIO_WatchdogTimeout(uint8_t param)
     if ((RadioConfiguration.flags & RADIO_FLAG_RECEIVING) != 0)
     {
         RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
-        if(mode==MODE_DEVICE) LORAWAN_RxTimeout();
+        send_chars("RX Watchdog Timeout\r\n");
+        if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxTimeout();
         else LORAX_RxTimeout();
     }
     else if ((RadioConfiguration.flags & RADIO_FLAG_TRANSMITTING) != 0)
@@ -1488,7 +1512,7 @@ static void RADIO_WatchdogTimeout(uint8_t param)
         // this time-out occured we cannot know for sure that the radio did not
         // transmit this whole time, so this is the safest way to go (block the
         // channel for a really long time from now on).
-        if(mode==MODE_DEVICE) LORAWAN_TxDone(RadioConfiguration.watchdogTimerTimeout);
+        if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_TxDone(RadioConfiguration.watchdogTimerTimeout);
         else LORAX_TxDone(RadioConfiguration.watchdogTimerTimeout,1);
     }
 }
