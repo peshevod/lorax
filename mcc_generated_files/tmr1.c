@@ -71,8 +71,8 @@ void TMR1_Initialize(void)
     //GSS T1G_pin; 
     T1GATE = 0x00;
 
-    //CS TMR0_Overflow; 
-    T1CLK = 0x09;
+    //CS LFINTOSC; 
+    T1CLK = 0x04;
 
     //TMR1H 0; 
     TMR1H = 0x00;

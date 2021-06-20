@@ -13,7 +13,7 @@ __EEPROM_DATA(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
 uint32_t uid;
 
 _par_t _pars[]={
-    {PAR_UI32,"Frequency",{ 868100000UL },"Base frequency, Hz"},
+    {PAR_UI32,"Frequency",{ 864100000UL },"Base frequency, Hz"},
     {PAR_UI8,"Channel",{ 2 },"Lora Channel number in channel list, 255 - no channel selected"},
     {PAR_UI8,"Modulation",{ 0 }, "Modulation 0: lora, 1-FSK no shaping, 2: FSK BT=1, 3: FSK BT=0.5, 4: FSK BT=0.3" },
     {PAR_UI32,"FSK_BitRate",{ 50000UL }, "FSK Datarate bit/s" },
@@ -40,6 +40,7 @@ _par_t _pars[]={
     {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm" },
     {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm" },
     {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON" },
+    {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack" },
     {0,NULL,{0},NULL}
 }; 
 

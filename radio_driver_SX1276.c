@@ -128,6 +128,8 @@ uint8_t rssi_reg, rssi_off;
 extern uint8_t mode;
 extern uint32_t bandwidth;
 extern uint8_t spread_factor;
+uint8_t rectimer;
+uint32_t rectimer_value, delta, ticks, ticks_old;
 
 void RADIO_RegisterWrite(uint8_t reg, uint8_t value)
 {
@@ -499,8 +501,15 @@ void RADIO_Init(uint8_t *radioBuffer, uint32_t frequency)
     set_s("FSK_BW",&RadioConfiguration.rxBw); // = FSKBW_50_0KHZ;
     set_s("FSK_AFC_BW",&RadioConfiguration.afcBw); // = FSKBW_83_3KHZ;
     RadioConfiguration.fhssNextFrequency = NULL;
-
-
+    
+    rectimer=SwTimerCreate();
+    rectimer_value=86400000;
+    SwTimerSetTimeout(rectimer,MS_TO_TICKS(rectimer_value));
+    SwTimerStart(rectimer);
+    delta=0;
+    ticks=0;
+    ticks_old=0;
+    
     // Make sure we do not allocate multiple software timers just because the
     // radio's initialization function is called multiple times.
     if (0 == RadioConfiguration.initialized)
@@ -588,8 +597,13 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
 
     // Load configuration from RadioConfiguration_t structure into radio
     RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
+    send_chars(MODULATION_LORA == RadioConfiguration.modulation ? "LORA " : "FSK ");
     RADIO_WriteFrequency(RadioConfiguration.frequency);
+    send_chars("F=");
+    send_chars(ui32toa(RadioConfiguration.frequency,b));
     RADIO_WritePower(RadioConfiguration.outputPower);
+    send_chars(" P=");
+    send_chars(i32toa(RadioConfiguration.outputPower,b));
 
     if (MODULATION_LORA == RadioConfiguration.modulation)
     {
@@ -604,7 +618,11 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
                 (RadioConfiguration.dataRate << SHIFT4) |
                 ((RadioConfiguration.crcOn & 0x01) << SHIFT2) |
                 ((symbolTimeout & 0x0300) >> SHIFT8));
-
+        send_chars(" sf=");
+        send_chars(ui8toa(RadioConfiguration.dataRate,b));
+        send_chars(" crc=");
+        send_chars(ui8toa(RadioConfiguration.crcOn,b));
+                
 
         // Handle frequency hopping, if necessary
         if (0 != RadioConfiguration.frequencyHopPeriod)
@@ -637,6 +655,8 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
         RADIO_RegisterWrite(REG_LORA_HOPPERIOD, (uint8_t)tempValue);
 
         RADIO_RegisterWrite(REG_LORA_SYMBTIMEOUTLSB, (symbolTimeout & 0xFF));
+        send_chars(" Symbol_Timeout=");
+        send_chars(ui32toa((uint32_t)symbolTimeout,b));
 
         // If the symbol time is > 16ms, LowDataRateOptimize needs to be set
         // This long symbol time only happens for SF12&BW125, SF12&BW250
@@ -695,10 +715,22 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
         }
 
         regValue = RADIO_RegisterRead(REG_LORA_INVERTIQ);
-        regValue &= ~(1 << SHIFT6);                                        // Clear InvertIQ bit
-        regValue |= (1 << SHIFT0);
-        regValue |= (RadioConfiguration.iqInverted & 0x01) << SHIFT6;    // Set InvertIQ bit if needed   
+//        regValue &= ~(1 << SHIFT6);                                        // Clear InvertIQ bit
+//        if(mode==MODE_NETWORK_SERVER) regValue &= ~(1 << SHIFT0); else regValue |= (1 << SHIFT0);
+//        if(mode==MODE_DEVICE) regValue |= (1 << SHIFT6); else regValue &= ~(1 << SHIFT6);    // Set InvertIQ bit if needed   
+        if(RadioConfiguration.iqInverted & 0x01)
+        {
+            regValue &= ~(1 << SHIFT0);
+            regValue |= (1 << SHIFT6);
+        }
+        else
+        {
+            regValue |= (1 << SHIFT0);
+            regValue &= ~(1 << SHIFT6);
+        }    // Set InvertIQ bit if needed   
         RADIO_RegisterWrite(REG_LORA_INVERTIQ, regValue);
+        send_chars(" IQInv=");
+        send_chars(ui8toa(RadioConfiguration.iqInverted,b));
         
         regValue = REG_LORA_INVERTIQ2_VALUE_OFF & (~((RadioConfiguration.iqInverted & 0x01) << SHIFT2));
         RADIO_RegisterWrite(REG_LORA_INVERTIQ2, regValue);
@@ -797,6 +829,7 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
         RADIO_RegisterWrite(REG_FSK_IRQFLAGS2, 0xFF);
 
     }
+    send_chars("\r\n");
 }
 
 RadioError_t RADIO_TransmitCW(void)
@@ -855,18 +888,13 @@ RadioError_t RADIO_Transmit(uint8_t *buffer, uint8_t bufferLen)
 
     if(RADIO_GetPABoost()) V1_SetLow();
     else V1_SetHigh();
-    
+        
     SwTimerStop(RadioConfiguration.timeOnAirTimerId);
 
     // Since we're interested in a transmission, rxWindowSize is irrelevant.
     // Setting it to 4 is a valid option.
     RADIO_WriteConfiguration(4);
 
-    send_chars("Transmit F=");
-    send_chars(ui32toa(RadioConfiguration.frequency,b));
-    send_chars(" dataRate=");
-    send_chars(ui8toa(RadioConfiguration.dataRate,b));
-    send_chars("\r\n");
 
     if (MODULATION_LORA == RadioConfiguration.modulation)
     {
@@ -914,6 +942,7 @@ RadioError_t RADIO_Transmit(uint8_t *buffer, uint8_t bufferLen)
     // If accurate timing of the time on air is required, the simplest way to
     // achieve it is to change this to a blocking mode switch.
     RADIO_WriteMode(MODE_TX, RadioConfiguration.modulation, 0);
+    send_chars("Transmit start\r\n");
 
     // Set timeout to some very large value since the timer counts down.
     // Leaving the callback uninitialized it will assume the default value of
@@ -981,12 +1010,6 @@ RadioError_t RADIO_ReceiveStart(uint16_t rxWindowSize)
 
     // Will use non blocking switches to RadioSetMode. We don't really care
     // when it starts receiving.
-    send_chars("Receiving start...");
-    send_chars("F=");
-    send_chars(ui32toa(RadioConfiguration.frequency,b));
-    send_chars(" sf=");
-    send_chars(ui8toa(RadioConfiguration.dataRate,b));
-    send_chars("\r\n");
     if (0 == rxWindowSize)
     {
         RADIO_WriteMode(MODE_RXCONT, RadioConfiguration.modulation, 0);
@@ -1004,6 +1027,7 @@ RadioError_t RADIO_ReceiveStart(uint16_t rxWindowSize)
             SwTimerStart(RadioConfiguration.fskRxWindowTimerId);
         }
     }
+    send_chars("Receiving start...\r\n");
 
     if (0 != RadioConfiguration.watchdogTimerTimeout)
     {
@@ -1033,7 +1057,20 @@ static void RADIO_RxDone(void)
     RADIO_RegisterWrite(REG_LORA_IRQFLAGS, (1<<SHIFT6) | (1<<SHIFT5) | (1<<SHIFT4));
     if (((1<<SHIFT6) | (1<<SHIFT4)) == (irqFlags & ((1<<SHIFT6) | (1<<SHIFT4))))
     {
-        send_chars("Received!\r\n");
+//        SwTimersExecute();
+        SwTimersInterrupt();
+        if(SwTimerIsRunning(rectimer))
+        {
+//            SwTimerStop(rectimer);
+            ticks=MS_TO_TICKS(rectimer_value)-SwTimerReadValue(rectimer);
+            delta=TICKS_TO_MS(ticks-ticks_old);
+            ticks_old=ticks;
+            send_chars("Received! delta=");
+            send_chars(ui32toa(delta,b));
+            send_chars("\r\n");
+//            SwTimerSetTimeout(rectimer,MS_TO_TICKS(rectimer_value));
+//            SwTimerStart(rectimer);
+        }
         // Make sure the watchdog won't trigger MAC functions erroneously.
         SwTimerStop(RadioConfiguration.watchdogTimerId);
         
@@ -1494,6 +1531,8 @@ static void RADIO_RxFSKTimeout(uint8_t param)
 
 static void RADIO_WatchdogTimeout(uint8_t param)
 {
+
+    V1_SetHigh();
     RADIO_WriteMode(MODE_STANDBY, RadioConfiguration.modulation, 1);
     RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
     RadioConfiguration.flags |= RADIO_FLAG_TIMEOUT;

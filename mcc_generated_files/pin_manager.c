@@ -146,9 +146,9 @@ void PIN_MANAGER_Initialize(void)
     //interrupt on change for group IOCBN - negative
     IOCBNbits.IOCBN0 = 1;
     //interrupt on change for group IOCBN - negative
-    IOCBNbits.IOCBN1 = 1;
+    IOCBNbits.IOCBN1 = 0;
     //interrupt on change for group IOCBN - negative
-    IOCBNbits.IOCBN2 = 1;
+    IOCBNbits.IOCBN2 = 0;
     //interrupt on change for group IOCBP - positive
     IOCBPbits.IOCBP0 = 1;
     //interrupt on change for group IOCBP - positive

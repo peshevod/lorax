@@ -41,8 +41,8 @@
 
 
 /****************************** VARIABLES *************************************/
-//const uint8_t rxWindowSize[] =  {8, 10, 14, 26, 49, 88, 60, 8};
-const uint8_t rxWindowSize[] =  {32, 40, 56, 104, 196, 352, 240, 32};
+const uint8_t rxWindowSize[] =  {8, 10, 14, 26, 49, 88, 60, 8};
+//const uint8_t rxWindowSize[] =  {32, 40, 56, 104, 196, 352, 240, 32};
 
 // Max Payload Size 
 const uint8_t maxPayloadSize[8] = {51, 51, 51, 115, 242, 242, 242, 56}; // for FSK max message size should be 64 bytes
@@ -50,8 +50,8 @@ const uint8_t maxPayloadSize[8] = {51, 51, 51, 115, 242, 242, 242, 56}; // for F
 // Channels by ism band
 ChannelParams_t Channels[MAX_RU_SINGLE_BAND_CHANNELS];
 
-//const int8_t rxWindowOffset[] = {-33, -50, -58, -62, -66, -68, -15, -2};
-const int8_t rxWindowOffset[] = {-66, -100, -116, -124, -132, -136, -30, -4};
+const int8_t rxWindowOffset[] = {-33, -50, -58, -62, -66, -68, -15, -2};
+//const int8_t rxWindowOffset[] = {-66, -100, -116, -124, -132, -136, -30, -4};
 
 // Tx power possibilities by ism band
 static const int8_t txPower868[] = {20, 14, 11, 8, 5, 2};
@@ -106,6 +106,8 @@ static const uint8_t FskSyncWordBuff[3] = {0xC1, 0x94, 0xC1};
 
 extern char b[128];
 extern uint8_t mode;
+uint8_t tt0;
+uint32_t tt0_value=86400;
 
 
 /************************ PRIVATE FUNCTION PROTOTYPES *************************/
@@ -148,7 +150,7 @@ static void EnableChannels1 (uint16_t channelMask, uint8_t channelMaskCntl, uint
 
 static void DutyCycleCallback (uint8_t param);
 
-static void ConfigureRadioTx(uint8_t dataRate, uint32_t freq);
+//static void ConfigureRadioTx(uint8_t dataRate, uint32_t freq);
 
 /****************************** FUNCTIONS *************************************/
 
@@ -450,18 +452,23 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
             else
             {
                 SwTimerSetTimeout(loRa.receiveWindow1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
+                send_chars("rec after ");
+                send_chars(ui32toa((uint32_t)(loRa.protocolParameters.receiveDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]),b));
+                send_chars(" ms\r\n");
                 SwTimerSetTimeout(loRa.receiveWindow2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay2 + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
                 SwTimerStart(loRa.receiveWindow1TimerId);
                 if (CLASS_A == loRa.deviceClass)
                 {
                     SwTimerStart(loRa.receiveWindow2TimerId);
                 }
+                SwTimersInterrupt();
 
                 Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)Channels[i].dutyCycle + 1) * ((uint32_t)loRa.prescaler) - 1);
             }
         }
         else if(mode==MODE_NETWORK_SERVER)
         {
+            loRa.macStatus.macState = IDLE;
             Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)Channels[i].dutyCycle + 1) * ((uint32_t)loRa.prescaler) - 1);
         }
 
@@ -526,10 +533,6 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
     send_chars("Transmission OK timeOnAir=");
     send_chars(ui32toa((uint32_t)timeOnAir,b));
     send_chars("\r\n");
-    if(mode==MODE_NETWORK_SERVER)
-    {
-        loRa.macStatus.macState = IDLE;
-    }
 }
 
 
@@ -538,6 +541,7 @@ void LORAWAN_RxTimeout(void)
 {
     uint8_t i;
     uint32_t minim = UINT32_MAX;
+    uint32_t delta = 0,ticks;       
 
     if (loRa.macStatus.macPause == 0)
     {
@@ -547,6 +551,15 @@ void LORAWAN_RxTimeout(void)
             if (CLASS_A == loRa.deviceClass)
             {
                 loRa.macStatus.macState = BETWEEN_RX1_RX2;
+                SwTimersInterrupt();
+                if(SwTimerIsRunning(tt0))
+                {
+                    ticks = SwTimerReadValue (tt0);
+                    send_chars("RxTimeout=");
+                    send_chars(ui32toa(tt0_value-TICKS_TO_MS(ticks),b));
+                    send_chars(" ms\r\n");
+                    SwTimerStop(tt0);
+                }
             }
             else if (CLASS_C == loRa.deviceClass)
             {
@@ -1031,6 +1044,7 @@ static void CreateAllSoftwareTimers (void)
     loRa.abpJoinTimerId = SwTimerCreate();
     loRa.dutyCycleTimerId = SwTimerCreate();
     loRa.sendDownAckTimerId = SwTimerCreate();
+    tt0=SwTimerCreate();
 }
 
 static void SetCallbackSoftwareTimers (void)
@@ -1061,6 +1075,7 @@ static void StopAllSoftwareTimers (void)
     SwTimerStop(loRa.abpJoinTimerId);
 	SwTimerStop(loRa.dutyCycleTimerId);
 	SwTimerStop(loRa.sendDownAckTimerId);
+	SwTimerStop(tt0);
 }
 
 static void InitDefault868Channels (void)
@@ -1355,7 +1370,7 @@ static void DutyCycleCallback (uint8_t param)
     }
 }
 
-static void ConfigureRadioTx(uint8_t dataRate, uint32_t freq)
+void ConfigureRadioTx(uint8_t dataRate, uint32_t freq)
 {
     int8_t txPower;
     
@@ -1382,7 +1397,17 @@ static void ConfigureRadioTx(uint8_t dataRate, uint32_t freq)
     send_chars("\r\n");
     RADIO_SetOutputPower (txPower);
     
-    RADIO_SetCRC(ENABLED);
-    RADIO_SetIQInverted(DISABLED);     
+    if(mode==MODE_NETWORK_SERVER)
+    {
+        RADIO_SetCRC(DISABLED);
+        RADIO_SetIQInverted(ENABLED); 
+    }
+    else
+    {
+        RADIO_SetCRC(ENABLED);
+        RADIO_SetIQInverted(DISABLED); 
+    }
+//    RADIO_SetCRC(ENABLED);
+//    RADIO_SetIQInverted(DISABLED);     
 }
 

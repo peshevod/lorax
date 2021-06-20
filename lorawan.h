@@ -45,8 +45,10 @@ extern "C" {
 /****************************** DEFINES ***************************************/
 
 // Recommended protocol parameters
+//#define RECEIVE_DELAY1                              1000UL
+//#define RECEIVE_DELAY2                              2000UL
 #define RECEIVE_DELAY1                              1000UL
-#define RECEIVE_DELAY2                              3000UL
+#define RECEIVE_DELAY2                              10000UL
 #define JOIN_ACCEPT_DELAY1                          5000UL
 #define JOIN_ACCEPT_DELAY2                          6000UL
 #define MAX_FCNT_GAP                                16384

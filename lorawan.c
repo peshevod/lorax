@@ -64,6 +64,8 @@ extern const uint8_t rxWindowSize[];
 extern const int8_t rxWindowOffset[];
 extern uint8_t mode;
 extern uint8_t b[128];
+extern uint8_t tt0;
+extern uint32_t tt0_value;
 
 
 /************************ FUNCTION PROTOTYPES *************************/
@@ -825,8 +827,13 @@ void LORAWAN_ReceiveWindow1Callback (uint8_t param)
         
         ConfigureRadioRx(loRa.receiveWindow1Parameters.dataRate, freq);
 
-//        RADIO_ReceiveStart(rxWindowSize[loRa.receiveWindow1Parameters.dataRate]);
-        RADIO_ReceiveStart(2000);
+        tt0_value=60000;
+        SwTimerSetTimeout(tt0,MS_TO_TICKS(tt0_value));
+        SwTimerStart(tt0);
+        
+        RADIO_ReceiveStart(rxWindowSize[loRa.receiveWindow1Parameters.dataRate]);
+//        RADIO_SetWatchdogTimeout(5000);
+//        RADIO_ReceiveStart(0);
     }
 }
 
@@ -840,7 +847,7 @@ void LORAWAN_Receive(void)
 //        send_chars("lora.currentdatarate=");
 //        send_chars(ui8toa(loRa.currentDataRate,b));
 //        send_chars("\r\n");
-        ConfigureRadio(loRa.currentDataRate, Channels[i].frequency);
+        ConfigureRadioRx(loRa.currentDataRate, Channels[i].frequency);
     }
     RADIO_ReceiveStart(0);
 
@@ -852,12 +859,15 @@ void LORAWAN_SendDownAckCallback (uint8_t param)
     
     if(loRa.macStatus.macPause == DISABLED)
     {
+        SelectChannelForTransmission(1);
         AssemblePacket (0, 0, 0, 0);
 
         RADIO_SetWatchdogTimeout(5000);
         if (RADIO_Transmit (&macBuffer[16], loRa.lastPacketLength) == OK)
         {
-            send_chars("Transmission begin\r\n");
+            send_chars("Ack transmission begin payload length=");
+            send_chars(ui32toa((uint32_t)loRa.lastPacketLength,b));
+            send_chars("\r\n");
             loRa.fCntDown.value ++;   // the uplink frame counter increments for every new transmission (it does not increment for a retransmission)
             loRa.lorawanMacStatus.synchronization = ENABLED;  //set the synchronization flag because one packet was sent (this is a guard for the the RxAppData of the user)
             loRa.macStatus.macState = TRANSMISSION_OCCURRING; // set the state of MAC to transmission occurring. No other packets can be sent afterwards
@@ -1142,7 +1152,8 @@ void ResetParametersForConfirmedTransmission (void)
 {
     loRa.macStatus.macState = IDLE;
     loRa.counterRepetitionsConfirmedUplink = 1;
-    loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage = DISABLED;
+//    loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage = DISABLED;
+    loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage = ENABLED;
 }
 
 void ResetParametersForUnconfirmedTransmission (void)
@@ -1180,6 +1191,8 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
 
     RADIO_ReleaseData();
 
+    send_chars("Received!!!\r\n");
+    
     if (loRa.macStatus.macPause == DISABLED)
     {
         mhdr.value = buffer[0];
@@ -1374,6 +1387,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                 }
                 return INVALID_PARAMETER;
             }
+            send_chars("Addr OK\r\n");
 
             AssembleEncryptionBlock (1, hdr->members.fCnt, bufferLength - sizeof (computedMic), 0x49, MCAST_DISABLED);
             memcpy (&radioBuffer[0], aesBuffer, sizeof (aesBuffer));
@@ -1394,6 +1408,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                 }
                 return INVALID_PARAMETER;
             }
+            send_chars("MIC OK\r\n");
 
             //  frame counter check, frame counter received should be less than last frame counter received, otherwise it  was an overflow
             if (hdr->members.fCnt >= loRa.fCntDown.members.valueLow)
@@ -1456,6 +1471,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                 }
                 return FRAME_COUNTER_ERROR_REJOIN_NEEDED;
             }
+            send_chars("fcnt OK\r\n");
 
             // if the downlink message was received during receive window 1, receive window 2 should not open any more, so its timer will be stopped
             if (loRa.macStatus.macState == RX1_OPEN)
@@ -1505,6 +1521,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
             {
                 frmPayloadLength = 0;
                 packet = NULL;
+                send_chars("frmPayloadLength = 0\r\n");
             }
 
             loRa.counterRepetitionsUnconfirmedUplink = 1; // reset the counter
@@ -1527,6 +1544,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                         rxPayload.RxAppData (packet, frmPayloadLength, MAC_OK);
                     }
                     loRa.macStatus.rxDone = 0;
+                    send_chars("Ack received\r\n");
                     if ( (loRa.macStatus.automaticReply == 1) && (loRa.lorawanMacStatus.synchronization == 0) && ( (loRa.lorawanMacStatus.ackRequiredFromNextUplinkMessage == 1) || (loRa.lorawanMacStatus.fPending == ENABLED) ) )
                     {
                         if (SearchAvailableChannel (loRa.maxChannels, 1, &channelIndex) == OK)
@@ -1545,6 +1563,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                 else
                 {
                     UpdateRetransmissionAckTimeoutState ();
+                    send_chars("Ack not received\r\n");
                 }
             }
             else
@@ -1612,27 +1631,34 @@ LorawanError_t LORAWAN_NSRxDone (uint8_t *buffer, uint8_t bufferLength)
     uint8_t frmPayloadLength;
     uint8_t *packet;
     uint8_t temp;
+    int32_t rx1_offset;
 
-    
+    set_s("RX1_OFFSET",&rx1_offset);
 //    SwTimerSetTimeout(loRa.sendDownAckTimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]/2));
-    SwTimerSetTimeout(loRa.sendDownAckTimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.receiveDelay1));
+
+    SwTimerSetTimeout(loRa.sendDownAckTimerId, MS_TO_TICKS(loRa.protocolParameters.receiveDelay1+rx1_offset));
     SwTimerStart(loRa.sendDownAckTimerId);
+    SwTimersInterrupt();
+    
+    send_chars("tx after ");
+    send_chars(ui32toa((uint32_t)(loRa.protocolParameters.receiveDelay1+rx1_offset),b));
+    send_chars(" ms\r\n");
 
     RADIO_ReleaseData();
-    send_chars("NSRxDone in\r\n");
+//    send_chars("NSRxDone in\r\n");
     mhdr.value = buffer[0];
     if ( mhdr.bits.mType == FRAME_TYPE_DATA_UNCONFIRMED_UP || mhdr.bits.mType == FRAME_TYPE_DATA_CONFIRMED_UP )
     {
         Hdr_t *hdr;
         hdr=(Hdr_t*)buffer;
-        send_chars("type OK\r\n");
+//        send_chars("type OK\r\n");
         if (hdr->members.devAddr.value != loRa.activationParameters.deviceAddress.value)
         {
             SetReceptionNotOkState();
             SwTimerStop(loRa.sendDownAckTimerId);
             return INVALID_PARAMETER;
         }
-        send_chars("Address OK\r\n");
+//        send_chars("Address OK\r\n");
         AssembleEncryptionBlock (0, hdr->members.fCnt, bufferLength - sizeof (computedMic), 0x49, MCAST_DISABLED);
         memcpy (&radioBuffer[0], aesBuffer, sizeof (aesBuffer));
         memcpy (&radioBuffer[16], buffer, bufferLength-sizeof(computedMic));
@@ -1648,14 +1674,14 @@ LorawanError_t LORAWAN_NSRxDone (uint8_t *buffer, uint8_t bufferLength)
             SwTimerStop(loRa.sendDownAckTimerId);
             return INVALID_PARAMETER;
         }
-        send_chars("MIC OK\r\n");
+//        send_chars("MIC OK\r\n");
         if (hdr->members.fCnt >= loRa.fCntUp.members.valueLow)
         {
-            send_chars("rec fCnt=");
-            send_chars(ui32toa((uint32_t)hdr->members.fCnt,b));
-            send_chars(" in fCnt=");
-            send_chars(ui32toa((uint32_t)loRa.fCntUp.members.valueLow,b));
-            send_chars("\r\n");
+//            send_chars("rec fCnt=");
+//            send_chars(ui32toa((uint32_t)hdr->members.fCnt,b));
+//            send_chars(" in fCnt=");
+//            send_chars(ui32toa((uint32_t)loRa.fCntUp.members.valueLow,b));
+//            send_chars("\r\n");
             
             if ((hdr->members.fCnt - loRa.fCntUp.members.valueLow) > loRa.protocolParameters.maxFcntGap) //if this difference is greater than the value of max_fct_gap then too many data frames have been lost then subsequesnt will be discarded
             {
@@ -1705,9 +1731,9 @@ LorawanError_t LORAWAN_NSRxDone (uint8_t *buffer, uint8_t bufferLength)
             return FRAME_COUNTER_ERROR_REJOIN_NEEDED;
         }
     }
-    loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage=DISABLED;
+    loRa.lorawanMacStatus.ackRequiredFromNextUplinkMessage=DISABLED;
     loRa.macStatus.macState = BEFORE_ACK;
-    send_chars("OK\r\n");
+    send_chars("NSRxDone OK\r\n");
     return OK;
 }
 
@@ -1849,7 +1875,7 @@ static void AssemblePacket (bool confirmed, uint8_t port, uint8_t *buffer, uint1
         {
             mhdr.bits.mType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
         }
-    }
+     }
     else
     {
         if(mode == MODE_DEVICE)
@@ -1859,6 +1885,7 @@ static void AssemblePacket (bool confirmed, uint8_t port, uint8_t *buffer, uint1
         if(mode == MODE_NETWORK_SERVER)
         {
             mhdr.bits.mType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
+            loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage = 1;
         }
     }
     mhdr.bits.major = 0;
@@ -1927,9 +1954,12 @@ static void AssemblePacket (bool confirmed, uint8_t port, uint8_t *buffer, uint1
 
     if (mode==MODE_NETWORK_SERVER && loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage == ENABLED)
     {
+        send_chars("Send Ack\r\n");
         fCtrl.ack = ENABLED;
         loRa.lorawanMacStatus.ackRequiredFromNextDownlinkMessage = DISABLED;
     }
+    else send_chars("Not send Ack\r\n");
+
 
     fCtrl.fPending = RESERVED_FOR_FUTURE_USE;  //fPending bit is ignored for uplink packets
 
@@ -2204,8 +2234,16 @@ static void SetReceptionNotOkState (void)
 static void ConfigureRadioRx(uint8_t dataRate, uint32_t freq)
 {
     ConfigureRadio(dataRate, freq);
-    RADIO_SetCRC(DISABLED);
-    RADIO_SetIQInverted(ENABLED); 
+    if(mode==MODE_DEVICE)
+    {
+        RADIO_SetCRC(DISABLED);
+        RADIO_SetIQInverted(ENABLED); 
+    }
+    else
+    {
+        RADIO_SetCRC(ENABLED);
+        RADIO_SetIQInverted(DISABLED); 
+    }
 }
 
 static void UpdateReceiveDelays (uint8_t delay)
@@ -2422,6 +2460,7 @@ uint8_t LORAWAN_GetState(void)
 void LORAWAN_Mainloop (void)
 {
     SwTimersExecute();
+//    send_chars("+");
 
     //Execute radio interrupts
     localDioStatus = INTERRUPT_GetDioStatus();

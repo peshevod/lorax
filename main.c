@@ -177,7 +177,7 @@ LorawanError_t  LORAX_RxDone(uint8_t* buffer, uint8_t buflen)
 void SX1276_Reset(void)
 {
     uint8_t t_nreset=SwTimerCreate();
-    SwTimerSetTimeout(t_nreset,MS_TO_TICKS(1));
+    SwTimerSetTimeout(t_nreset,MS_TO_TICKS(5));
     NRESET_SetLow();
     SwTimerStart(t_nreset);
     while(SwTimerIsRunning(t_nreset)) SwTimersExecute();

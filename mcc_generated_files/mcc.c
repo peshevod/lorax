@@ -55,9 +55,8 @@ void SYSTEM_Initialize(void)
     OSCILLATOR_Initialize();
     NCO1_Initialize();
     TMR3_Initialize();
-    EXT_INT_Initialize();
     TMR1_Initialize();
-    TMR0_Initialize();
+    EXT_INT_Initialize();
     UART1_Initialize();
     SPI1_Initialize();
     CLKREF_Initialize();
@@ -71,8 +70,8 @@ void OSCILLATOR_Initialize(void)
     OSCCON3 = 0x00;
     // MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled; 
     OSCEN = 0x00;
-    // HFFRQ 8_MHz; 
-    OSCFRQ = 0x03;
+    // HFFRQ 64_MHz; 
+    OSCFRQ = 0x08;
     // TUN 0; 
     OSCTUNE = 0x00;
 }

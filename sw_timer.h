@@ -54,15 +54,19 @@ extern "C" {
 // then divider must change from 2^12/125UL to 2000/61
     
 //#define MS_TO_TICKS_SHORT(n)                            ( (((uint32_t)(n)) << SHIFT12) / 125UL )
-#define MS_TO_TICKS_SHORT(n)                            ( (((uint32_t)(n)) * 2000) / 61UL )
+//#define MS_TO_TICKS_SHORT(n)                            ( (((uint32_t)(n)) * 2000) / 61UL )
+#define MS_TO_TICKS_SHORT(n)                            ( ((uint32_t)(n)) * 31UL )
 //#define MS_TO_TICKS_LONG(n)                             ( (((uint32_t)(n)) / 125UL) << SHIFT12 )
-#define MS_TO_TICKS_LONG(n)                             ( (((uint32_t)(n)) / 61UL) * 2000 )
+//#define MS_TO_TICKS_LONG(n)                             ( (((uint32_t)(n)) / 61UL) * 2000 )
+#define MS_TO_TICKS_LONG(n)                             ( ((uint32_t)(n)) * 31UL )
 #define MS_TO_TICKS_LONG_THRESHOLD                      0x000FFFFFUL
 
 //#define TICKS_TO_MS_SHORT(n)                            ( (((uint32_t)(n)) * 125UL) >> SHIFT12 )
-#define TICKS_TO_MS_SHORT(n)                            ( (((uint32_t)(n)) * 61UL) / 2000 )
+//#define TICKS_TO_MS_SHORT(n)                            ( (((uint32_t)(n)) * 61UL) / 2000 )
+#define TICKS_TO_MS_SHORT(n)                            ( ((uint32_t)(n)) / 31UL )
 //#define TICKS_TO_MS_LONG(n)                             ( (((uint32_t)(n)) >> SHIFT12) * 125UL )
-#define TICKS_TO_MS_LONG(n)                             ( (((uint32_t)(n)) / 2000 ) * 61UL )
+//#define TICKS_TO_MS_LONG(n)                             ( (((uint32_t)(n)) / 2000 ) * 61UL )
+#define TICKS_TO_MS_LONG(n)                             ( ((uint32_t)(n)) / 31UL )
 #define TICKS_TO_MS_LONG_THRESHOLD                      0x00DFAC1FUL
 
 #define MS_TO_TICKS(n)                                  ((n) < MS_TO_TICKS_LONG_THRESHOLD ? MS_TO_TICKS_SHORT(n) : MS_TO_TICKS_LONG(n) )

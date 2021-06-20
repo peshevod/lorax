@@ -204,6 +204,8 @@ typedef struct
     uint8_t sendDownAckTimerId;
 } LoRa_t;
 
+void ConfigureRadioTx(uint8_t dataRate, uint32_t freq);
+
 extern LoRa_t loRa;
 
 /*************************** FUNCTIONS PROTOTYPE ******************************/
