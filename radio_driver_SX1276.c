@@ -1057,20 +1057,6 @@ static void RADIO_RxDone(void)
     RADIO_RegisterWrite(REG_LORA_IRQFLAGS, (1<<SHIFT6) | (1<<SHIFT5) | (1<<SHIFT4));
     if (((1<<SHIFT6) | (1<<SHIFT4)) == (irqFlags & ((1<<SHIFT6) | (1<<SHIFT4))))
     {
-//        SwTimersExecute();
-        SwTimersInterrupt();
-        if(SwTimerIsRunning(rectimer))
-        {
-//            SwTimerStop(rectimer);
-            ticks=MS_TO_TICKS(rectimer_value)-SwTimerReadValue(rectimer);
-            delta=TICKS_TO_MS(ticks-ticks_old);
-            ticks_old=ticks;
-            send_chars("Received! delta=");
-            send_chars(ui32toa(delta,b));
-            send_chars("\r\n");
-//            SwTimerSetTimeout(rectimer,MS_TO_TICKS(rectimer_value));
-//            SwTimerStart(rectimer);
-        }
         // Make sure the watchdog won't trigger MAC functions erroneously.
         SwTimerStop(RadioConfiguration.watchdogTimerId);
         
@@ -1100,11 +1086,25 @@ static void RADIO_RxDone(void)
             rssi_reg=RADIO_RegisterRead(REG_LORA_PKTRSSIVALUE);
             RadioConfiguration.packetSNR = RADIO_RegisterRead(REG_LORA_PKTSNRVALUE);
             RadioConfiguration.packetSNR /= (int8_t)4;
+
+            SwTimersInterrupt();
+            if(SwTimerIsRunning(rectimer))
+            {
+                ticks=MS_TO_TICKS(rectimer_value)-SwTimerReadValue(rectimer);
+                delta=TICKS_TO_MS(ticks-ticks_old);
+                ticks_old=ticks;
+                send_chars("Received! delta=");
+                send_chars(ui32toa(delta,b));
+                send_chars(" snr=");
+                send_chars(i32toa((int32_t)RadioConfiguration.packetSNR,b));
+                send_chars("\r\n");
+            }
         }
         else
         {
             // CRC required and CRC error found.
             RadioConfiguration.flags |= RADIO_FLAG_RXERROR;
+            send_chars("***Received with CRC error!!!\r\n");
         }
         RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
         RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;

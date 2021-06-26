@@ -1191,7 +1191,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
 
     RADIO_ReleaseData();
 
-    send_chars("Received!!!\r\n");
+//    send_chars("Received!!!\r\n");
     
     if (loRa.macStatus.macPause == DISABLED)
     {

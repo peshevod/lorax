@@ -11,41 +11,58 @@
 __EEPROM_DATA(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
 
 uint32_t uid;
+uint8_t appkey[16]= {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10};
 
 _par_t _pars[]={
-    {PAR_UI32,"Frequency",{ 864100000UL },"Base frequency, Hz"},
-    {PAR_UI8,"Channel",{ 2 },"Lora Channel number in channel list, 255 - no channel selected"},
-    {PAR_UI8,"Modulation",{ 0 }, "Modulation 0: lora, 1-FSK no shaping, 2: FSK BT=1, 3: FSK BT=0.5, 4: FSK BT=0.3" },
-    {PAR_UI32,"FSK_BitRate",{ 50000UL }, "FSK Datarate bit/s" },
-    {PAR_UI8,"FSK_BW",{ 0b01011 }, "bits: <ab><cde> <ab>: 00,01,10 BW= FXOSC/( 16*( (4+<ab>) * 2^<cde> ) )  FSK Bandwidth, Hz 0b01011 = BW 50kHz" },
-    {PAR_UI8,"FSK_AFC_BW",{ 0b10010 }, "bits: <ab><cde> <ab>: 00,01,10 BW= FXOSC/( 16*( (4+<ab>) * 2^<cde> ) )  FSK AFC Bandwidth, Hz 0b10010 = AFC BW 83,3kHz" },
-    {PAR_UI32,"BW",{ 125000UL }, "LORA Bandwidth, Hz 125 or 250 or 500 kHz" },
-    {PAR_UI32,"Deviation",{ 25000UL }, "FSK Frequency deviation, Hz" },
-    {PAR_UI8,"SF",{ 7 }, "LORA Spreading Factor (bitrate) 7-12" },
-    {PAR_UI8,"CRC",{ 1 }, "LORA 1: CRC ON, 0: CRC OFF" },
-    {PAR_UI8,"FEC",{ 1 }, "LORA FEC 1: 4/5, 2: 4/6 3: 4/7 4: 4/8" },
-    {PAR_UI8,"Header_Mode",{ 0 }, "LORA Header 0: Explicit, 1: Implicit" },
-    {PAR_I32,"Power",{ 1 }, "Power, dbm" },
-    {PAR_UI8,"Boost",{ 0 }, "PA Boost 1: PABoost ON 0: PABoost OFF" },
-    {PAR_UI8,"IQ_Inverted",{ 0 }, "LORA 0: IqInverted OFF 1: IqInverted ON" },
-    {PAR_I32,"SNR",{ -125 }, "FSK Packet SNR" },
-    {PAR_UI8,"Mode",{ 1 }, "Mode 0:receive, 1:transmit, 2:device, 3:simple gateway" },
-    {PAR_UI32,"Preamble_Len",{ 8 }, "Preamble length" },
-    {PAR_UI32,"UID",{ 0x12345678 }, "UID" },
-    {PAR_UI8,"LORA_SyncWord",{ 0x34 }, "LORA Sync Word" },
-    {PAR_UI8,"FSK_SyncWordLen",{ 3 }, "FSK Sync Word length 1-3" },
-    {PAR_UI32,"FSK_SyncWord",{ 0xC194C100 }, "FSK Sync Words " },
-    {PAR_UI32,"Interval",{ 30 }, "Interval between actions (trans or rec), sec." },
-    {PAR_UI8,"Rep",{ 3 }, "Number of repeated messages in trans mode" },
-    {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm" },
-    {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm" },
-    {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON" },
-    {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack" },
+    {PAR_UI32,"Frequency",{ 864100000UL },"Base frequency, Hz",VISIBLE},
+    {PAR_UI8,"Channel",{ 2 },"Lora Channel number in channel list, 255 - no channel selected",VISIBLE},
+    {PAR_UI8,"Modulation",{ 0 }, "Modulation 0: lora, 1-FSK no shaping, 2: FSK BT=1, 3: FSK BT=0.5, 4: FSK BT=0.3",VISIBLE },
+    {PAR_UI32,"FSK_BitRate",{ 50000UL }, "FSK Datarate bit/s",VISIBLE },
+    {PAR_UI8,"FSK_BW",{ 0b01011 }, "bits: <ab><cde> <ab>: 00,01,10 BW= FXOSC/( 16*( (4+<ab>) * 2^<cde> ) )  FSK Bandwidth, Hz 0b01011 = BW 50kHz",VISIBLE },
+    {PAR_UI8,"FSK_AFC_BW",{ 0b10010 }, "bits: <ab><cde> <ab>: 00,01,10 BW= FXOSC/( 16*( (4+<ab>) * 2^<cde> ) )  FSK AFC Bandwidth, Hz 0b10010 = AFC BW 83,3kHz",VISIBLE },
+    {PAR_UI32,"BW",{ 125000UL }, "LORA Bandwidth, Hz 125 or 250 or 500 kHz",VISIBLE },
+    {PAR_UI32,"Deviation",{ 25000UL }, "FSK Frequency deviation, Hz",VISIBLE },
+    {PAR_UI8,"SF",{ 7 }, "LORA Spreading Factor (bitrate) 7-12",VISIBLE },
+    {PAR_UI8,"CRC",{ 1 }, "LORA 1: CRC ON, 0: CRC OFF",VISIBLE },
+    {PAR_UI8,"FEC",{ 1 }, "LORA FEC 1: 4/5, 2: 4/6 3: 4/7 4: 4/8",VISIBLE },
+    {PAR_UI8,"Header_Mode",{ 0 }, "LORA Header 0: Explicit, 1: Implicit",VISIBLE },
+    {PAR_I32,"Power",{ 1 }, "Power, dbm",VISIBLE },
+    {PAR_UI8,"Boost",{ 0 }, "PA Boost 1: PABoost ON 0: PABoost OFF",VISIBLE },
+    {PAR_UI8,"IQ_Inverted",{ 0 }, "LORA 0: IqInverted OFF 1: IqInverted ON",VISIBLE },
+    {PAR_I32,"SNR",{ -125 }, "FSK Packet SNR",VISIBLE },
+    {PAR_UI8,"Mode",{ 1 }, "Mode 0:receive, 1:transmit, 2:device, 3:simple gateway",VISIBLE },
+    {PAR_UI32,"Preamble_Len",{ 8 }, "Preamble length",VISIBLE },
+    {PAR_UI32,"UID",{ 0x12345678 }, "UID",VISIBLE },
+    {PAR_UI8,"LORA_SyncWord",{ 0x34 }, "LORA Sync Word",VISIBLE },
+    {PAR_UI8,"FSK_SyncWordLen",{ 3 }, "FSK Sync Word length 1-3",VISIBLE },
+    {PAR_UI32,"FSK_SyncWord",{ 0xC194C100 }, "FSK Sync Words ",VISIBLE },
+    {PAR_UI32,"Interval",{ 30 }, "Interval between actions (trans or rec), sec.",VISIBLE },
+    {PAR_UI8,"Rep",{ 3 }, "Number of repeated messages in trans mode",VISIBLE },
+    {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm",VISIBLE },
+    {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm",VISIBLE },
+    {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON",VISIBLE },
+    {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack",VISIBLE },
+    {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",HIDDEN },
+    {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev1Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev1Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev2Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev2Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev3Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev3Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev4Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev4Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev5Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev5Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",HIDDEN },
+    {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",HIDDEN },
+    {PAR_EUI64,"Join1Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join1Eui 64",HIDDEN },
+    {PAR_EUI64,"Join2Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join2Eui 64",HIDDEN },
+    {PAR_EUI64,"Join3Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join3Eui 64",HIDDEN },
     {0,NULL,{0},NULL}
 }; 
 
 char t[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 extern uint8_t b[128];
+uint8_t mui[16];
+uint8_t c8[16];
+uint8_t show_hidden=0;
 
 char c_buf[BUF_LEN], val_buf[BUF_LEN], par_buf[32];
 uint8_t c_len;
@@ -55,6 +72,7 @@ char err[] = {"\r\nError\r\n> "};
 char ex[] = {"\r\nExit\r\n"};
 char commands[] = {'S', 'L', 'D'};
 char ver[]={"=== S2-LP shell v 1.1.5 ===\r\n"};
+uint8_t d[5];
 
 void send_chars(char* x) {
     uint8_t i=0;
@@ -200,10 +218,22 @@ void Sync_EEPROM(void)
     {
         while(__pars->type)
         {
-            if(__pars->type==PAR_UI8) __pars->u.ui8par=DATAEE_ReadByte(i);
-            else for(uint8_t j=0;j<4;j++) ((uint8_t*)(&(__pars->u.ui32par)))[j]=DATAEE_ReadByte(i+3-j);
+            if(__pars->type==PAR_UI8)
+            {
+                __pars->u.ui8par=DATAEE_ReadByte(i);
+                i++;
+            }
+            else if(__pars->type==PAR_UI32 || __pars->type==PAR_I32 )
+            {
+                for(uint8_t j=0;j<4;j++) ((uint8_t*)(&(__pars->u.ui32par)))[j]=DATAEE_ReadByte(i+3-j);
+                i+=4;
+            }
+            else if(__pars->type==PAR_KEY128)
+            {
+                for(uint8_t j=0;j<16;j++) __pars->u.key[j]=DATAEE_ReadByte(i+j);
+                i+=16;
+            }
             __pars++;
-            i+=4;
         }
         get_uid(&uid);
     }
@@ -211,13 +241,31 @@ void Sync_EEPROM(void)
     {
         while(__pars->type)
         {
-            if(__pars->type==PAR_UI8) DATAEE_WriteByte(i,__pars->u.ui8par);
-            else for(int j=0;j<4;j++) DATAEE_WriteByte(i+3-j,((uint8_t*)(&(__pars->u.ui32par)))[j]);
+            if(__pars->type==PAR_UI8)
+            {
+                DATAEE_WriteByte(i,__pars->u.ui8par);
+                i++;
+            }
+            else if(__pars->type==PAR_UI32 || __pars->type==PAR_I32 )
+            {
+                for(int j=0;j<4;j++) DATAEE_WriteByte(i+3-j,((uint8_t*)(&(__pars->u.ui32par)))[j]);
+                i+=4;
+            }
+            else if(__pars->type==PAR_KEY128)
+            {
+                for(uint8_t j=0;j<16;j++)
+                {
+//                    send_chars(ui8tox(__pars->u.key[j],b));
+                    DATAEE_WriteByte(i+j,__pars->u.key[j]);
+                }
+//                send_chars("\r\n");
+                i+=16;
+            }
             __pars++;
-            i+=4;
         }
         set_s("UID",&uid);
         set_uid(uid);
+        make_deveui();
         DATAEE_WriteByte(0x0000, 1);
     }
 }
@@ -226,20 +274,41 @@ void Sync_EEPROM(void)
 
 void _print_par(_par_t* par)
 {
+    if(par->visible==HIDDEN && !show_hidden) return;
     if(par->type==PAR_UI32)
     {
         if(hex) ui32tox(par->u.ui32par, val_buf);
         else ui32toa(par->u.ui32par, val_buf);
     }
-    if(par->type==PAR_I32)
+    else if(par->type==PAR_I32)
     {
         if(hex) i32tox(par->u.i32par, val_buf);
         else i32toa(par->u.i32par, val_buf);
     }
-    if(par->type==PAR_UI8)
+    else if(par->type==PAR_UI8)
     {
         if(hex) ui8tox(par->u.ui8par, val_buf);
         else ui8toa(par->u.ui8par, val_buf);
+    }
+    else if(par->type==PAR_KEY128)
+    {
+        for(uint8_t j=0;j<16;j++)
+        {
+            ui8tox(par->u.key[j], d);
+            val_buf[2*j]=d[2];
+            val_buf[2*j+1]=d[3];
+        }
+        val_buf[32]=0;
+    }
+    else if(par->type==PAR_EUI64)
+    {
+        for(uint8_t j=0;j<8;j++)
+        {
+            ui8tox(par->u.eui[j], d);
+            val_buf[2*j]=d[2];
+            val_buf[2*j+1]=d[3];
+        }
+        val_buf[16]=0;
     }
     char* s=par->c;
     while(*s!=0)
@@ -301,53 +370,201 @@ uint8_t set_par(char* par, char* val_buf)
                 if (stringToUInt32(val_buf, &(__pars->u.ui32par))) return 1;
                 for(uint8_t j=0;j<4;j++) DATAEE_WriteByte(i+3-j,((uint8_t*)(&(__pars->u.ui32par)))[j]);
             }
-            if(__pars->type==PAR_I32)
+            else if(__pars->type==PAR_I32)
             {
                 if (stringToInt32(val_buf, &(__pars->u.i32par))) return 1;
                 for(uint8_t j=0;j<4;j++) DATAEE_WriteByte(i+3-j,((uint8_t*)(&(__pars->u.i32par)))[j]);
             }
-            if(__pars->type==PAR_UI8)
+            else if(__pars->type==PAR_UI8)
             {
                 if (stringToUInt8(val_buf, &(__pars->u.ui8par))) return 1;
                 DATAEE_WriteByte(i,__pars->u.ui8par);
             }
+            else if(__pars->type==PAR_KEY128)
+            {
+                if(strlen(val_buf)!=32) return 1;
+                d[0]='0';
+                d[1]='x';
+                d[4]=0;
+                if(!strcmp(__pars->c,"AppKey"))
+                {
+                    if(!show_hidden)
+                    {
+                        uint8_t cmp;
+                        for(uint8_t j=0;j<16;j++)
+                        {
+                            d[2]=val_buf[2*j];
+                            d[3]=val_buf[2*j+1];
+                            if(stringToUInt8(d,&cmp)) return 1;
+                            if(cmp!=__pars->u.key[j]) return 1;
+                        }
+                        show_hidden=VISIBLE;
+                        return 0;
+                    }
+                }
+                for(uint8_t j=0;j<16;j++)
+                {
+                    d[2]=val_buf[2*j];
+                    d[3]=val_buf[2*j+1];
+                    if (stringToUInt8(d, &(__pars->u.key[j]))) return 1;
+                    DATAEE_WriteByte(i+j,__pars->u.key[j]);
+                }
+            }
+            else if(__pars->type==PAR_EUI64)
+            {
+                if(strlen(val_buf)!=16) return 1;
+                d[0]='0';
+                d[1]='x';
+                d[4]=0;
+                for(uint8_t j=0;j<8;j++)
+                {
+                    d[2]=val_buf[2*j];
+                    d[3]=val_buf[2*j+1];
+                    if (stringToUInt8(d, &(__pars->u.eui[j]))) return 1;
+                    DATAEE_WriteByte(i+j,__pars->u.eui[j]);
+                }
+            }
             return 0;
-        };
+        }
+        if(__pars->type==PAR_UI8) i++;
+        else if(__pars->type==PAR_UI32 || __pars->type==PAR_I32 ) i+=4;
+        else if(__pars->type==PAR_KEY128) i+=16;
+        else if(__pars->type==PAR_EUI64) i+=8;
         __pars++;
-        i+=4;
     }
     return 1;
 }
 
-void set_uid(uint32_t uid)
+void clear_uid(void)
 {
-    NVMCON1bits.REG=1;
+    NVMCON1bits.REG = 1;
     TBLPTRU=0x20;
     TBLPTRH=0x00;
     TBLPTRL=0x00;
-    
-    for(uint8_t n=0;n<4;n++)
-    {
-        TABLAT=((uint8_t*)&uid)[n];
-
-        if (n == 3)
-        {
-            asm("TBLWT");
-        }
-        else
-        {
-            asm("TBLWTPOSTINC");
-            asm("TBLWTPOSTINC");
-        }
-    }
-    NVMCON1bits.NVMREG = 1;
     NVMCON1bits.WREN = 1;	
+    NVMCON1bits.FREE = 1;
     INTERRUPT_GlobalInterruptDisable();
     NVMCON2 = 0x55;
     NVMCON2 = 0xAA;
     NVMCON1bits.WR = 1; // Start program
     INTERRUPT_GlobalInterruptEnable();
     NVMCON1bits.WREN = 0; // Disable writes to memory
+}
+
+uint32_t read_uid(void)
+{
+    uint32_t res;
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x20;
+    TBLPTRH=0x00;
+    TBLPTRL=0x00;
+    
+    for(uint8_t j=0;j<16;j++)
+    {
+        asm("TBLRDPOSTINC");
+        c8[j]=TABLAT;
+    }
+/*    send_chars("c=");
+    for(uint8_t j=0;j<16;j++)
+    {
+        send_chars(" ");
+        send_chars(ui8tox(c8[j],b));
+    }
+    send_chars("\r\n");*/
+    for(uint8_t j=0;j<4;j++) ((uint8_t*)(&res))[j]=c8[j];
+    return res;
+}
+
+void write_uid(void)
+{
+    NVMCON1bits.REG = 1;
+    TBLPTRU=0x20;
+    TBLPTRH=0x00;
+    TBLPTRL=0x00;
+    for(uint8_t j=0;j<16;j++)
+    {
+        TABLAT=c8[j];
+        asm("TBLWTPOSTINC");
+    }
+    NVMCON1bits.REG = 1;
+    NVMCON1bits.WREN = 1;	
+    NVMCON1bits.FREE = 0;
+    INTERRUPT_GlobalInterruptDisable();
+    NVMCON2 = 0x55;
+    NVMCON2 = 0xAA;
+    NVMCON1bits.WR = 1; // Start program
+    INTERRUPT_GlobalInterruptEnable();
+    NVMCON1bits.WREN = 0; // Disable writes to memory
+}
+
+void set_uid(uint32_t uid)
+{
+    read_uid();
+    clear_uid();
+    for(uint8_t j=0;j<4;j++) c8[j]=((uint8_t*)(&uid))[j];
+    write_uid();
+}
+
+uint32_t getinc(uint8_t join)
+{
+    uint32_t* x;
+    if(join==0 || join>3) return 0xFFFFFFFF;
+    read_uid();
+    clear_uid();
+    x=(uint32_t*)(&c8[4*join]);
+    (*x)++;
+    write_uid();
+    read_uid();
+}
+
+void get_mui(uint8_t* mui)
+{
+    
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x3F;
+    TBLPTRH=0x00;
+    for(int8_t n=0;n<16;n++)
+    {
+        TBLPTRL=n;
+        mui[n]=0;
+        INTERRUPT_GlobalInterruptDisable();
+        asm("TBLRD");
+        mui[n]=TABLAT;
+        INTERRUPT_GlobalInterruptEnable();
+    }
+}
+
+uint32_t get_did(void)
+{
+    uint32_t did0=0;
+    uint8_t r;
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x3F;
+    TBLPTRH=0xFF;
+    for(uint8_t i=0;i<4;i++)
+    {
+        TBLPTRL=0xFC + i;
+        INTERRUPT_GlobalInterruptDisable();
+        asm("TBLRD");
+        r=TABLAT;
+        did0|=((uint32_t)r)<<(8*i);
+        INTERRUPT_GlobalInterruptEnable();
+    }
+    return did0;
+}
+
+void make_deveui(void)
+{
+    get_mui(mui);
+    for(uint8_t j=0;j<8;j++)
+    {
+        ui8tox(mui[j+2],b);
+        val_buf[2*j]=b[2];
+        val_buf[2*j+1]=b[3];
+    }
+    val_buf[16]=0;
+    set_par("DEV0EUI",val_buf);
+    set_par("JOIN0EUI",val_buf);
 }
 
 uint8_t set_s(char* p,void* s)
@@ -552,6 +769,7 @@ void start_x_shell(void) {
     get_uid(&uid);
     set_uid(uid);
     c_len = 0;
+    show_hidden=0;
 //    SetTimer3(11000);
     timerId=SwTimerCreate();
     send_chars(ver);

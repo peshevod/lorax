@@ -100,6 +100,8 @@ uint8_t spread_factor;
 extern char b[128];
 extern uint8_t trace;
 extern uint8_t rssi_reg, rssi_off;
+extern uint8_t mui[16];
+
 char* errors[] = {
     "OK",
     "NETWORK_NOT_JOINED",
@@ -272,6 +274,7 @@ void main(void)
     // Disable the Global Interrupts
     //INTERRUPT_GlobalInterruptDisable();
 
+//    clear_uid();
     Sync_EEPROM();
     SystemTimerInit();
     TMR_ISR_Lora_Init();
@@ -280,6 +283,18 @@ void main(void)
     send_chars("\r\nuid=");
     send_chars(ui32tox(uid,b));
     send_chars("\r\n");
+/*    send_chars("mui=");
+    get_mui(mui);
+    for(uint8_t i=0;i<16;i++)
+    {
+        send_chars(" ");
+        send_chars(ui8tox(mui[i],b));
+    }
+    send_chars("\r\ndid=");
+    uint32_t did=get_did();
+    send_chars(ui32tox(did,b));
+    send_chars("\r\n");*/
+    
             
     start_x_shell();
 
@@ -418,10 +433,11 @@ void main(void)
             SysConfigSleep();
     
             LORAWAN_Init(RxDataDone, RxJoinResponse);
-            LORAWAN_SetNetworkSessionKey(nwkSKey);
-            LORAWAN_SetApplicationSessionKey(appSKey);
-            LORAWAN_SetDeviceAddress(devAddr);
-            LORAWAN_Join(ABP);
+            LORAWAN_SetDeviceEui(&mui[2]);
+//            LORAWAN_SetNetworkSessionKey(nwkSKey);
+//            LORAWAN_SetApplicationSessionKey(appSKey);
+//            LORAWAN_SetDeviceAddress(devAddr);
+//            LORAWAN_Join(ABP);
             // Wait for Join response
             while(endDeviceJoinedFlag == false)
             {

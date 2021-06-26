@@ -13,6 +13,8 @@ extern "C" {
 #endif
 
 #define BUF_LEN 256
+#define VISIBLE 1
+#define HIDDEN  0    
 
     
 #define send_prompt()   {send_chars((char*)prompt);}  
@@ -23,7 +25,9 @@ typedef enum
 {
     PAR_UI32=1,
     PAR_I32,
-    PAR_UI8        
+    PAR_UI8,
+    PAR_KEY128,
+    PAR_EUI64        
 } par_type_t;
 
 typedef enum
@@ -44,8 +48,11 @@ typedef struct par
         uint32_t ui32par;
         int32_t i32par;
         uint8_t ui8par;
+        uint8_t key[16];
+        uint8_t eui[8];
     } u;
     char* d;
+    uint8_t visible;
 } _par_t;
     
 void start_x_shell(void);
@@ -66,6 +73,13 @@ uint8_t set_s(char* p,void* s);
 void get_uid(uint32_t* uid);
 void set_uid(uint32_t uid);
 void Sync_EEPROM(void);
+void get_mui(uint8_t* mui);
+uint32_t get_did(void);
+void make_deveui(void);
+uint32_t getinc(uint8_t join);
+void clear_uid(void);
+uint32_t read_uid(void);
+void write_uid(void);
 
 #ifdef	__cplusplus
 }
