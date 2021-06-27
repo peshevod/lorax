@@ -34,6 +34,7 @@ extern "C" {
     
 /****************************** INCLUDES **************************************/    
 #include "lorawan_defs.h"
+#include "lorawan.h"
 
 /****************************** DEFINES ***************************************/    
     
@@ -175,17 +176,6 @@ typedef union
     } members;
 } FCnt_t;
 
-//union used for instantiation of DeviceEui and Application Eui
-typedef union
-{
-    uint8_t buffer[8];
-    struct
-    {
-        uint32_t genericEuiL;
-        uint32_t genericEuiH;
-    }members;
-} GenericEui_t;
-
 typedef struct
 {
     ActivationType_t activationType;
@@ -195,6 +185,7 @@ typedef struct
     uint8_t applicationKey[16];   
     GenericEui_t applicationEui;
     GenericEui_t deviceEui;
+    GenericEui_t joinEui;
     DeviceAddress_t mcastDeviceAddress;
     uint8_t mcastNetworkSessionKey[16];
     uint8_t mcastApplicationSessionKey[16];
@@ -283,6 +274,7 @@ typedef union
     {
         unsigned deviceEui: 1;              //if set, device EUI was defined
         unsigned applicationEui:1;
+        unsigned joinEui:1;
         unsigned deviceAddress: 1;
         unsigned applicationKey:1;
         unsigned networkSessionKey:1;

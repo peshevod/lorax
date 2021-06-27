@@ -7,11 +7,12 @@
 #include "sw_timer.h"
 #include <xc.h>
 #include "mcc_generated_files/memory.h"
+#include "lorawan.h"
+#include "lorawan_private.h"
 
 __EEPROM_DATA(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
 
 uint32_t uid;
-uint8_t appkey[16]= {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10};
 
 _par_t _pars[]={
     {PAR_UI32,"Frequency",{ 864100000UL },"Base frequency, Hz",VISIBLE},
@@ -41,25 +42,27 @@ _par_t _pars[]={
     {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON",VISIBLE },
+    {PAR_UI8,"JNumber",{ 0 }, "Select Join Server - 0 ,1, 2 or 3",VISIBLE },
     {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack",VISIBLE },
     {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",HIDDEN },
     {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev1Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev1Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev2Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev2Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev3Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev3Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Dev1Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Dev2Eui 64",HIDDEN },
+    {PAR_EUI64,"Dev3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Dev3Eui 64",HIDDEN },
     {PAR_EUI64,"Dev4Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev4Eui 64",HIDDEN },
     {PAR_EUI64,"Dev5Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev5Eui 64",HIDDEN },
     {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",HIDDEN },
     {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",HIDDEN },
     {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",HIDDEN },
-    {PAR_EUI64,"Join1Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join1Eui 64",HIDDEN },
-    {PAR_EUI64,"Join2Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join2Eui 64",HIDDEN },
-    {PAR_EUI64,"Join3Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join3Eui 64",HIDDEN },
+    {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Join1Eui 64",HIDDEN },
+    {PAR_EUI64,"Join2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Join2Eui 64",HIDDEN },
+    {PAR_EUI64,"Join3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Join3Eui 64",HIDDEN },
     {0,NULL,{0},NULL}
 }; 
 
 char t[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 extern uint8_t b[128];
+extern uint8_t mode;
 uint8_t mui[16];
 uint8_t c8[16];
 uint8_t show_hidden=0;
@@ -475,6 +478,7 @@ uint32_t read_uid(void)
     return res;
 }
 
+
 void write_uid(void)
 {
     NVMCON1bits.REG = 1;
@@ -505,16 +509,23 @@ void set_uid(uint32_t uid)
     write_uid();
 }
 
-uint32_t getinc(uint8_t join)
+void get_uid(uint32_t* uid)
 {
-    uint32_t* x;
-    if(join==0 || join>3) return 0xFFFFFFFF;
+    read_uid();
+    for(uint8_t j=0;j<4;j++) ((uint8_t*)uid)[j]=c8[j];
+}
+
+uint16_t getinc(uint8_t join)
+{
+    uint16_t* x;
+    if(join>5) return 0xFFFFFFFF;
     read_uid();
     clear_uid();
-    x=(uint32_t*)(&c8[4*join]);
+    x=(uint16_t*)(&c8[4+2*join]);
     (*x)++;
     write_uid();
-    read_uid();
+//    read_uid();
+    return (*x);
 }
 
 void get_mui(uint8_t* mui)
@@ -577,30 +588,13 @@ uint8_t set_s(char* p,void* s)
             if(__pars->type==PAR_UI32) *((uint32_t*)s)=__pars->u.ui32par;
             if(__pars->type==PAR_I32)  *((int32_t*)s)=__pars->u.i32par;
             if(__pars->type==PAR_UI8)  *((uint8_t*)s)=__pars->u.ui8par;
+            if(__pars->type==PAR_EUI64) for(uint8_t j=0;j<8;j++) ((GenericEui_t*)s)->buffer[j]=__pars->u.eui[j];
+            if(__pars->type==PAR_KEY128) for(uint8_t j=0;j<16;j++) ((uint8_t*)s)[j]=__pars->u.key[j];
             return 0;
         };
         __pars++;
     }
     return 1;
-}
-
-void get_uid(uint32_t* uid)
-{
-    *uid=0;
-    for(uint8_t n=0;n<4;n++)
-    {
-        NVMCON1bits.REG=1;
-        TBLPTRU=0x20;
-        TBLPTRH=0x00;
-        TBLPTRL=2*n;
-        INTERRUPT_GlobalInterruptDisable();
-        asm("TBLRD");
-        NOP();
-        NOP();
-        NOP();
-        ((uint8_t*)uid)[n]=TABLAT;
-        INTERRUPT_GlobalInterruptEnable();
-    }
 }
 
 char* i32toa(int32_t i, char* b) {

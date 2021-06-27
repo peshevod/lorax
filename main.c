@@ -66,6 +66,8 @@
 uint8_t nwkSKey[16] = {0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C};
 uint8_t appSKey[16] = {0x3C, 0x8F, 0x26, 0x27, 0x39, 0xBF, 0xE3, 0xB7, 0xBC, 0x08, 0x26, 0x99, 0x1A, 0xD0, 0x50, 0x4D};
 uint32_t devAddr = 0x89002483;
+uint8_t appkey[16];
+
 
 uint8_t endDeviceJoinedFlag = false;
 bool readAndSendFlag = true;
@@ -96,6 +98,8 @@ volatile uint32_t rest, counter, counter0;
 uint8_t ncol, ncoh, ncou, nco;
 volatile uint8_t insleep;
 uint8_t spread_factor;
+GenericEui_t JoinEui, DevEui;
+uint8_t joinServer;
 
 extern char b[128];
 extern uint8_t trace;
@@ -362,10 +366,16 @@ void main(void)
             SysConfigSleep();
     
             LORAWAN_Init(RxDataDone, RxJoinResponse);
-            LORAWAN_SetNetworkSessionKey(nwkSKey);
-            LORAWAN_SetApplicationSessionKey(appSKey);
-            LORAWAN_SetDeviceAddress(devAddr);
-            LORAWAN_Join(ABP);
+//            LORAWAN_SetNetworkSessionKey(nwkSKey);
+//            LORAWAN_SetApplicationSessionKey(appSKey);
+//            LORAWAN_SetDeviceAddress(devAddr);
+            set_s("DEV0EUI",&DevEui);
+            LORAWAN_SetDeviceEui(&DevEui);
+            joinServer=selectJoinServer();
+            LORAWAN_SetJoinEui(&JoinEui);
+            set_s("APPKEY",appkey);
+            LORAWAN_SetApplicationKey(appkey);
+            LORAWAN_Join(OTAA);
             SwTimerStart(t0);
             
 //            LORAWAN_SetChannelIdStatus (0, DISABLED);

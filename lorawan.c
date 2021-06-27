@@ -26,11 +26,11 @@
  ******************************************************************************/
 
 /****************************** INCLUDES **************************************/
+#include "lorawan_private.h"
 #include "lorawan.h"
 #include "lorawan_aes.h"
 #include "lorawan_aes_cmac.h"
 #include "lorawan_defs.h"
-#include "lorawan_private.h"
 #include "AES.h"
 #include "radio_driver_SX1276.h"
 #include "sw_timer.h"
@@ -66,6 +66,7 @@ extern uint8_t mode;
 extern uint8_t b[128];
 extern uint8_t tt0;
 extern uint32_t tt0_value;
+extern uint8_t joinServer;
 
 
 /************************ FUNCTION PROTOTYPES *************************/
@@ -115,6 +116,7 @@ static void ConfigureRadioRx(uint8_t dataRate, uint32_t freq);
 extern void UpdateCfList (uint8_t bufferLength, JoinAccept_t *joinAccept);
 
 uint8_t localDioStatus;
+extern GenericEui_t JoinEui, DevEui;
 
 /****************************** PUBLIC FUNCTIONS ******************************/
 
@@ -143,7 +145,7 @@ LorawanError_t LORAWAN_Join(ActivationType_t activationTypeNew)
     if (OTAA == activationTypeNew)
     {
         //OTAA
-        if ( (loRa.macKeys.deviceEui == 0) || (loRa.macKeys.applicationEui == 0) || (loRa.macKeys.applicationKey == 0) )
+        if ( (loRa.macKeys.deviceEui == 0) || (loRa.macKeys.joinEui == 0) || (loRa.macKeys.applicationKey == 0) )
         {
             return KEYS_NOT_INITIALIZED;
         }
@@ -340,7 +342,7 @@ void LORAWAN_GetMcastNetworkSessionKey (uint8_t *mcastNetworkSessionKey)
     }
 }
 
-void LORAWAN_SetDeviceEui (uint8_t *deviceEuiNew)
+void LORAWAN_SetDeviceEui (GenericEui_t *deviceEuiNew)
 {
    if (deviceEuiNew != NULL)
    {
@@ -350,24 +352,62 @@ void LORAWAN_SetDeviceEui (uint8_t *deviceEuiNew)
    }
 }
 
-void LORAWAN_GetDeviceEui (uint8_t *deviceEui)
+void LORAWAN_GetDeviceEui (GenericEui_t *deviceEui)
 {
-   memcpy(deviceEui, loRa.activationParameters.deviceEui.buffer, sizeof(loRa.activationParameters.deviceEui) );
+   memcpy(deviceEui->buffer, loRa.activationParameters.deviceEui.buffer, sizeof(loRa.activationParameters.deviceEui) );
 }
 
-void LORAWAN_SetApplicationEui (uint8_t *applicationEuiNew)
+void LORAWAN_SetApplicationEui (GenericEui_t *applicationEuiNew)
 {
    if (applicationEuiNew != NULL)
    {
-       memcpy(loRa.activationParameters.applicationEui.buffer, applicationEuiNew, 8);
+       memcpy(loRa.activationParameters.applicationEui.buffer, applicationEuiNew->buffer, 8);
        loRa.macKeys.applicationEui = 1;
        loRa.macStatus.networkJoined = DISABLED; // this is a guard against overwriting any of the addresses after one join was already done. If any of the addresses change, rejoin is needed
    }
 }
 
-void LORAWAN_GetApplicationEui (uint8_t *applicationEui)
+void LORAWAN_GetApplicationEui (GenericEui_t *applicationEui)
 {
    memcpy (applicationEui, loRa.activationParameters.applicationEui.buffer, sizeof(loRa.activationParameters.applicationEui) );
+}
+
+void LORAWAN_SetJoinEui (GenericEui_t *joinEuiNew)
+{
+    if (joinEuiNew != NULL)
+   {
+       if(euicmp(&(loRa.activationParameters.joinEui),joinEuiNew))
+       {
+           memcpy(loRa.activationParameters.joinEui.buffer, joinEuiNew->buffer, 8);
+           loRa.macStatus.networkJoined = DISABLED; // this is a guard against overwriting any of the addresses after one join was already done. If any of the addresses change, rejoin is needed
+           if(!euicmpz(joinEuiNew))
+           {
+               loRa.macKeys.joinEui = 1;
+           }
+           else
+           {
+               loRa.macKeys.joinEui = 0;
+           }
+       }
+       else
+       {
+           if(!euicmpz(joinEuiNew))
+           {
+               loRa.macKeys.joinEui = 1;
+           }
+           else
+           {
+               loRa.macKeys.joinEui = 0;
+               loRa.macStatus.networkJoined = DISABLED; // this is a guard against overwriting any of the addresses after one join was already done. If any of the addresses change, rejoin is needed
+           }
+           
+       }
+   }
+}
+
+void LORAWAN_GetJoinEui (GenericEui_t *joinEui)
+{
+   memcpy (joinEui->buffer, loRa.activationParameters.joinEui.buffer, sizeof(loRa.activationParameters.joinEui) );
 }
 
 void LORAWAN_SetDeviceAddress (uint32_t deviceAddressNew)
@@ -2034,9 +2074,9 @@ static uint8_t PrepareJoinRequestFrame (void)
 
     for(iCtr = 0; iCtr < 8; iCtr ++)
     {
-        macBuffer[bufferIndex + iCtr] = loRa.activationParameters.applicationEui.buffer[7 - iCtr];
+        macBuffer[bufferIndex + iCtr] = loRa.activationParameters.joinEui.buffer[7 - iCtr];
     }
-    bufferIndex = bufferIndex + sizeof(loRa.activationParameters.applicationEui);
+    bufferIndex = bufferIndex + sizeof(loRa.activationParameters.joinEui);
 
     //memcpy ( &macBuffer[bufferIndex], &loRa.activationParameters.deviceEui, sizeof(loRa.activationParameters.deviceEui));
     for (iCtr = 0; iCtr < 8; iCtr ++)
@@ -2045,7 +2085,8 @@ static uint8_t PrepareJoinRequestFrame (void)
     }
     bufferIndex = bufferIndex + sizeof( loRa.activationParameters.deviceEui );
 
-    loRa.devNonce = Random (UINT16_MAX);
+//    loRa.devNonce = Random (UINT16_MAX);
+    loRa.devNonce=getinc(joinServer);
     memcpy (&macBuffer[bufferIndex], &loRa.devNonce, sizeof (loRa.devNonce) );
     bufferIndex = bufferIndex + sizeof( loRa.devNonce );
 
@@ -2448,6 +2489,54 @@ static void EncryptFRMPayload (uint8_t* buffer, uint8_t bufferLength, uint8_t di
         for (j = 0; j < (bufferLength % AES_BLOCKSIZE); j++)
         {
             bufferToBeEncrypted[macBufferIndex++] = aesBuffer[j] ^ buffer[(AES_BLOCKSIZE*k) + j];
+        }
+    }
+}
+
+uint8_t euicmpz(GenericEui_t* eui)
+{
+    for(uint8_t j=0;j<8;j++) if(eui->buffer[j]!=0) return 1;
+    return 0;    
+}
+
+uint8_t euicmp(GenericEui_t* eui1, GenericEui_t* eui2)
+{
+    for(uint8_t j=0;j<8;j++) if( eui1->buffer[j] != eui2->buffer[j] ) return 1;
+    return 0;
+}
+
+uint8_t selectJoinServer(void)
+{
+    char joinName[9];
+    uint8_t js;
+    set_s("JOIN0EUI",&JoinEui);
+    strcpy(joinName,"JOIN0EUI");
+    if(mode==MODE_NETWORK_SERVER)
+    {
+        for(uint8_t j=1;j<4;j++)
+        {
+            joinName[4]=0x30+j;
+            set_s(joinName,&DevEui);
+            if(!euicmp(&JoinEui,&DevEui)) return j;
+        }
+        for(uint8_t j=1;j<4;j++)
+        {
+            joinName[4]=0x30+j;
+            set_s(joinName,&DevEui);
+            if(euicmpz(&DevEui)) return j;
+        }
+    }
+    else if(mode==MODE_DEVICE)
+    {
+        set_s("JNUMBER",js);
+        joinName[4]=0x30+js;
+        set_s(joinName,&JoinEui);
+        if(euicmpz(&JoinEui)) return js;
+        for(uint8_t j=1;j<4;j++)
+        {
+            joinName[4]=0x30+j;
+            set_s(joinName,&JoinEui);
+            if(euicmpz(&JoinEui)) return j;
         }
     }
 }

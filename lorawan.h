@@ -136,6 +136,17 @@ typedef union
     };
 } LorawanStatus_t;
 
+//union used for instantiation of DeviceEui and Application Eui
+typedef union
+{
+    uint8_t buffer[8];
+    struct
+    {
+        uint32_t genericEuiL;
+        uint32_t genericEuiH;
+    }members;
+} GenericEui_t;
+
 /*************************** FUNCTIONS PROTOTYPE ******************************/
 
 typedef struct
@@ -334,7 +345,7 @@ void LORAWAN_GetMcastApplicationSessionKey (uint8_t *mcastApplicationSessionKey)
     None
  * @Example
  */
-void LORAWAN_SetDeviceEui (uint8_t *deviceEuiNew);
+void LORAWAN_SetDeviceEui (GenericEui_t *deviceEuiNew);
 
 /**
  * @Summary
@@ -350,7 +361,7 @@ void LORAWAN_SetDeviceEui (uint8_t *deviceEuiNew);
     None
  * @Example
 */
-void LORAWAN_GetDeviceEui (uint8_t *deviceEui);
+void LORAWAN_GetDeviceEui (GenericEui_t *deviceEui);
 
 /**
  * @Summary
@@ -366,7 +377,23 @@ void LORAWAN_GetDeviceEui (uint8_t *deviceEui);
     None
  * @Example
 */
-void LORAWAN_SetApplicationEui (uint8_t *applicationEuiNew);
+void LORAWAN_SetApplicationEui (GenericEui_t *applicationEuiNew);
+
+/**
+ * @Summary
+    Sets the join identifier.
+ * @Description
+    This function sets the end-device Application identifier (JoinEUI)
+    The JoinEUI is a global application ID in IEEE EUI64 address space that uniquely identifies the join server of the end-device.
+ * @Preconditions
+    Pointer must be allocated by caller.
+ * @Param
+    joinEuiNew - buffer where JoinEUI is stored
+ * @Returns
+    None
+ * @Example
+*/
+void LORAWAN_SetJoinEui (GenericEui_t *joinEuiNew);
 
 /**
  * @Summary
@@ -383,7 +410,24 @@ void LORAWAN_SetApplicationEui (uint8_t *applicationEuiNew);
     None
  * @Example
 */
-void LORAWAN_GetApplicationEui (uint8_t *applicationEui);
+void LORAWAN_GetApplicationEui (GenericEui_t *applicationEui);
+
+/**
+ * @Summary
+    Gets the value of the join identifier.
+ * @Description
+    This function gets the end-device Join identifier (JoinEUI)
+    The JoinEUI is a global application ID in IEEE EUI64 address space that uniquely
+    identifies the join server of the end-device.
+ * @Preconditions
+    Pointer must be allocated by caller.
+ * @Param
+    joinEui - buffer where the value is stored
+ * @Returns
+    None
+ * @Example
+*/
+void LORAWAN_GetJoinEui (GenericEui_t *joinEui);
 
 /**
  * @Summary
@@ -1535,6 +1579,11 @@ void print_error(LorawanError_t err);
 
 void LORAWAN_SendDownAckCallback (uint8_t param);
 void LORAWAN_Receive(void);
+uint8_t selectJoinServer(void);
+uint8_t euicmpz(GenericEui_t* eui);
+uint8_t euicmp(GenericEui_t* eui1, GenericEui_t* eui2);
+
+
 
 #ifdef	__cplusplus
 }
