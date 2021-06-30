@@ -74,6 +74,7 @@ typedef enum
     INVALID_CLASS                               ,
     MCAST_PARAM_ERROR                           ,
     MCAST_MSG_ERROR                             ,
+    DEVICE_DEVNONCE_ERROR                       ,
 } LorawanError_t;                          
 
 typedef enum
@@ -146,6 +147,23 @@ typedef union
         uint32_t genericEuiH;
     }members;
 } GenericEui_t;
+
+typedef struct
+{
+    GenericEui_t Eui;
+    uint16_t DevNonce;
+    uint16_t JoinNonce;
+} EEPROM_Data_t;
+
+typedef struct
+{
+    GenericEui_t Eui;
+    uint16_t DevNonce;
+    uint16_t JoinNonce;
+    uint8_t js;
+    uint8_t NwkSKey[16];
+    uint8_t AppSKey[16];
+} Profile_t;
 
 /*************************** FUNCTIONS PROTOTYPE ******************************/
 
@@ -1579,9 +1597,23 @@ void print_error(LorawanError_t err);
 
 void LORAWAN_SendDownAckCallback (uint8_t param);
 void LORAWAN_Receive(void);
-uint8_t selectJoinServer(void);
-uint8_t euicmpz(GenericEui_t* eui);
+uint8_t selectJoinServer(Profile_t* joinServer);
+uint8_t euicmpnz(GenericEui_t* eui);
 uint8_t euicmp(GenericEui_t* eui1, GenericEui_t* eui2);
+uint8_t euicmpr(GenericEui_t* eui1, GenericEui_t* eui2);
+void LORAWAN_SetActivationType(ActivationType_t activationTypeNew);
+uint8_t fill_devices(void);
+uint8_t get_Eui(uint8_t n,GenericEui_t* deveui);
+uint8_t put_Eui(uint8_t n,GenericEui_t* deveui);
+void put_DevNonce( uint8_t n, uint16_t devnonce);
+uint16_t get_DevNonce(uint8_t n);
+void put_JoinNonce(uint8_t n, uint16_t joinnonce);
+uint16_t get_JoinNonce(uint8_t n);
+uint32_t get_EEPROM_types();
+void put_EEPROM_types(uint32_t t);
+uint8_t get_EEPROM_type(uint8_t n);
+void set_EEPROM_type(uint8_t n);
+void clear_EEPROM_type(uint8_t n);
 
 
 

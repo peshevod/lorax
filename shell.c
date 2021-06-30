@@ -42,7 +42,7 @@ _par_t _pars[]={
     {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON",VISIBLE },
-    {PAR_UI8,"JNumber",{ 0 }, "Select Join Server - 0 ,1, 2 or 3",VISIBLE },
+    {PAR_UI8,"JSNumber",{ 0 }, "Select Join Server - 1, 2 or 3",VISIBLE },
     {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack",VISIBLE },
     {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",HIDDEN },
     {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",HIDDEN },
@@ -52,7 +52,7 @@ _par_t _pars[]={
     {PAR_EUI64,"Dev4Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev4Eui 64",HIDDEN },
     {PAR_EUI64,"Dev5Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev5Eui 64",HIDDEN },
     {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",HIDDEN },
+//    {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",HIDDEN },
     {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",HIDDEN },
     {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Join1Eui 64",HIDDEN },
     {PAR_EUI64,"Join2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Join2Eui 64",HIDDEN },
@@ -515,19 +515,6 @@ void get_uid(uint32_t* uid)
     for(uint8_t j=0;j<4;j++) ((uint8_t*)uid)[j]=c8[j];
 }
 
-uint16_t getinc(uint8_t join)
-{
-    uint16_t* x;
-    if(join>5) return 0xFFFFFFFF;
-    read_uid();
-    clear_uid();
-    x=(uint16_t*)(&c8[4+2*join]);
-    (*x)++;
-    write_uid();
-//    read_uid();
-    return (*x);
-}
-
 void get_mui(uint8_t* mui)
 {
     
@@ -577,6 +564,8 @@ void make_deveui(void)
     set_par("DEV0EUI",val_buf);
     set_par("JOIN0EUI",val_buf);
 }
+
+
 
 uint8_t set_s(char* p,void* s)
 {

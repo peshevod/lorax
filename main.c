@@ -99,12 +99,14 @@ uint8_t ncol, ncoh, ncou, nco;
 volatile uint8_t insleep;
 uint8_t spread_factor;
 GenericEui_t JoinEui, DevEui;
-uint8_t joinServer;
 
 extern char b[128];
 extern uint8_t trace;
 extern uint8_t rssi_reg, rssi_off;
 extern uint8_t mui[16];
+extern uint8_t js_number;
+extern Profile_t joinServer;
+extern uint8_t number_of_devices;
 
 char* errors[] = {
     "OK",
@@ -119,8 +121,10 @@ char* errors[] = {
     "NO_CHANNELS_FOUND",
     "INVALID_CLASS",
     "MCAST_PARAM_ERROR",
-    "MCAST_MSG_ERROR"
+    "MCAST_MSG_ERROR",
+    "DEVICE_DEVNONCE_ERROR"
 };
+
 
 
 void LORAX_TxDone(uint16_t timeOnAir, uint8_t was_timeout)
@@ -371,8 +375,8 @@ void main(void)
 //            LORAWAN_SetDeviceAddress(devAddr);
             set_s("DEV0EUI",&DevEui);
             LORAWAN_SetDeviceEui(&DevEui);
-            joinServer=selectJoinServer();
-            LORAWAN_SetJoinEui(&JoinEui);
+            js_number=selectJoinServer(&joinServer);
+            LORAWAN_SetJoinEui(&(joinServer.Eui));
             set_s("APPKEY",appkey);
             LORAWAN_SetApplicationKey(appkey);
             LORAWAN_Join(OTAA);
@@ -442,8 +446,12 @@ void main(void)
 
             SysConfigSleep();
     
-            LORAWAN_Init(RxDataDone, RxJoinResponse);
             LORAWAN_SetDeviceEui(&mui[2]);
+            number_of_devices=fill_devices();
+            set_s("JOIN0EUI",&JoinEui);
+            LORAWAN_SetDeviceEui(&JoinEui);
+            LORAWAN_Init(RxDataDone, RxJoinResponse);
+            LORAWAN_SetActivationType(OTAA);
 //            LORAWAN_SetNetworkSessionKey(nwkSKey);
 //            LORAWAN_SetApplicationSessionKey(appSKey);
 //            LORAWAN_SetDeviceAddress(devAddr);

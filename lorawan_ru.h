@@ -123,6 +123,18 @@ typedef union
     } members;
 } JoinAccept_t;
 
+typedef union
+{
+    uint8_t joinRequestCounter[19];
+    struct
+    {
+        Mhdr_t mhdr;
+        GenericEui_t JoinEui;
+        GenericEui_t DevEui;
+        uint16_t DevNonce;
+    } members;
+} JoinRequest_t;
+
 //Channel parameters
 typedef struct
 {

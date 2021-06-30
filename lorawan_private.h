@@ -105,6 +105,12 @@ extern "C" {
 #define JA_NET_ID_SIZE                          3
 
 #define MAX_FOPTS_LEN                           0x0F
+    
+#define DEVICE_EEPROM                           1
+#define JOINSERVER_EEPROM                       0
+    
+#define EUI_EEPROM_START                        0x0280
+#define MAX_EEPROM_RECORDS                      32    
 
 /***************************** TYPEDEFS ***************************************/
     

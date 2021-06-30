@@ -14,7 +14,7 @@ extern "C" {
 
 #define BUF_LEN 256
 #define VISIBLE 1
-#define HIDDEN  0    
+#define HIDDEN  0 
 
     
 #define send_prompt()   {send_chars((char*)prompt);}  
@@ -76,7 +76,6 @@ void Sync_EEPROM(void);
 void get_mui(uint8_t* mui);
 uint32_t get_did(void);
 void make_deveui(void);
-uint32_t getinc(uint8_t join);
 void clear_uid(void);
 uint32_t read_uid(void);
 void write_uid(void);

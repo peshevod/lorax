@@ -38,6 +38,7 @@
 #include <math.h>
 #include "lorawan_ru.h"
 #include "shell.h"
+#include "mcc_generated_files/memory.h"
 
 /****************************** VARIABLES *************************************/
 
@@ -57,6 +58,12 @@ uint8_t macBuffer[MAXIMUM_BUFFER_LENGTH];
 uint8_t radioBuffer[MAXIMUM_BUFFER_LENGTH];
 static uint8_t aesBuffer[AES_BLOCKSIZE];
 RxAppData_t rxPayload;
+Profile_t devices[MAX_EEPROM_RECORDS];
+Profile_t joinServer;
+uint8_t js_number;
+uint8_t dev_number;
+uint8_t number_of_devices;
+uint32_t EEPROM_types;
 
 extern const uint8_t maxPayloadSize[];
 extern ChannelParams_t Channels[];
@@ -66,7 +73,6 @@ extern uint8_t mode;
 extern uint8_t b[128];
 extern uint8_t tt0;
 extern uint32_t tt0_value;
-extern uint8_t joinServer;
 
 
 /************************ FUNCTION PROTOTYPES *************************/
@@ -119,6 +125,12 @@ uint8_t localDioStatus;
 extern GenericEui_t JoinEui, DevEui;
 
 /****************************** PUBLIC FUNCTIONS ******************************/
+
+void LORAWAN_SetActivationType(ActivationType_t activationTypeNew)
+{
+    loRa.activationParameters.activationType = activationTypeNew;   
+}
+
 
 LorawanError_t LORAWAN_Join(ActivationType_t activationTypeNew)
 {
@@ -380,7 +392,7 @@ void LORAWAN_SetJoinEui (GenericEui_t *joinEuiNew)
        {
            memcpy(loRa.activationParameters.joinEui.buffer, joinEuiNew->buffer, 8);
            loRa.macStatus.networkJoined = DISABLED; // this is a guard against overwriting any of the addresses after one join was already done. If any of the addresses change, rejoin is needed
-           if(!euicmpz(joinEuiNew))
+           if(!euicmpnz(joinEuiNew))
            {
                loRa.macKeys.joinEui = 1;
            }
@@ -391,7 +403,7 @@ void LORAWAN_SetJoinEui (GenericEui_t *joinEuiNew)
        }
        else
        {
-           if(!euicmpz(joinEuiNew))
+           if(!euicmpnz(joinEuiNew))
            {
                loRa.macKeys.joinEui = 1;
            }
@@ -1236,7 +1248,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
     if (loRa.macStatus.macPause == DISABLED)
     {
         mhdr.value = buffer[0];
-        if ( (mhdr.bits.mType == FRAME_TYPE_JOIN_ACCEPT) && (loRa.activationParameters.activationType == 0) )
+        if ( (mhdr.bits.mType == FRAME_TYPE_JOIN_ACCEPT) && (loRa.activationParameters.activationType == OTAA) )
         {
             temp = bufferLength - 1; //MHDR not encrypted
             while (temp > 0) 
@@ -1291,6 +1303,43 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
             loRa.fCntDown.value = 0; // downlink counter becomes 0              
 
             return OK;
+        }
+        else if ( (mhdr.bits.mType == FRAME_TYPE_JOIN_REQ) && (loRa.activationParameters.activationType == OTAA) )
+        {
+            computedMic = ComputeMic (loRa.activationParameters.applicationKey, buffer, bufferLength - sizeof(extractedMic));
+            extractedMic = ExtractMic (buffer, bufferLength);
+            if (extractedMic != computedMic)
+            {
+                return INVALID_PARAMETER;
+            }
+            JoinRequest_t *joinRequest;
+            joinRequest=(JoinRequest_t*)buffer;
+            if(euicmpr(&(joinRequest->members.JoinEui),&JoinEui))
+            {
+                return INVALID_PARAMETER;
+            }
+            bool found=false;
+            for(uint8_t j=0;j<number_of_devices;j++)
+            {
+                if(euicmpr(&(joinRequest->members.DevEui),&(devices[j].Eui)))
+                {
+                    dev_number=j;
+                    found=true;
+                }
+            }
+            if(!found)
+            {
+                return INVALID_PARAMETER;
+            }
+            if(joinRequest->members.DevNonce>=devices[dev_number].DevNonce)
+            {
+                devices[dev_number].DevNonce=joinRequest->members.DevNonce+1;
+                put_DevNonce(devices[dev_number].js,devices[dev_number].DevNonce);
+            }
+            else
+            {
+                return DEVICE_DEVNONCE_ERROR;
+            }
         }
         else if ( (mhdr.bits.mType == FRAME_TYPE_DATA_UNCONFIRMED_DOWN) || (mhdr.bits.mType == FRAME_TYPE_DATA_CONFIRMED_DOWN) )
         {
@@ -2086,7 +2135,9 @@ static uint8_t PrepareJoinRequestFrame (void)
     bufferIndex = bufferIndex + sizeof( loRa.activationParameters.deviceEui );
 
 //    loRa.devNonce = Random (UINT16_MAX);
-    loRa.devNonce=getinc(joinServer);
+    loRa.devNonce=joinServer.DevNonce;
+    joinServer.DevNonce++;
+    put_DevNonce(js_number, joinServer.DevNonce);
     memcpy (&macBuffer[bufferIndex], &loRa.devNonce, sizeof (loRa.devNonce) );
     bufferIndex = bufferIndex + sizeof( loRa.devNonce );
 
@@ -2493,7 +2544,7 @@ static void EncryptFRMPayload (uint8_t* buffer, uint8_t bufferLength, uint8_t di
     }
 }
 
-uint8_t euicmpz(GenericEui_t* eui)
+uint8_t euicmpnz(GenericEui_t* eui)
 {
     for(uint8_t j=0;j<8;j++) if(eui->buffer[j]!=0) return 1;
     return 0;    
@@ -2505,40 +2556,225 @@ uint8_t euicmp(GenericEui_t* eui1, GenericEui_t* eui2)
     return 0;
 }
 
-uint8_t selectJoinServer(void)
+uint8_t euicmpr(GenericEui_t* eui1, GenericEui_t* eui2)
+{
+    for(uint8_t j=0;j<8;j++) if( eui1->buffer[7-j] != eui2->buffer[j] ) return 1;
+    return 0;
+}
+
+uint8_t selectJoinServer(Profile_t* joinServer)
 {
     char joinName[9];
-    uint8_t js;
-    set_s("JOIN0EUI",&JoinEui);
+    EEPROM_Data_t join_eeprom;
+    uint8_t jsnumber,js=0,found=0,foundk=0,kfree,jlast=0;
+    EEPROM_types=get_EEPROM_types();
+    if(EEPROM_types==0xFFFFFFFF)
+    {
+        EEPROM_types=0;
+        put_EEPROM_types(EEPROM_types);
+    }
+    set_s("JSNUMBER",jsnumber);
     strcpy(joinName,"JOIN0EUI");
-    if(mode==MODE_NETWORK_SERVER)
+    for(uint8_t j=1;j<4;j++)
     {
-        for(uint8_t j=1;j<4;j++)
+        joinName[4]=0x30 + j;
+        set_s(joinName,&(joinServer->Eui));
+        jlast=j;
+        if(euicmpnz(&(joinServer->Eui)))
         {
-            joinName[4]=0x30+j;
-            set_s(joinName,&DevEui);
-            if(!euicmp(&JoinEui,&DevEui)) return j;
-        }
-        for(uint8_t j=1;j<4;j++)
-        {
-            joinName[4]=0x30+j;
-            set_s(joinName,&DevEui);
-            if(euicmpz(&DevEui)) return j;
+            found=0;
+            foundk=0;
+            for(uint8_t k=0;k<MAX_EEPROM_RECORDS;k++)
+            {
+                if(get_Eui(k,&join_eeprom)==1)
+                {
+                     if(euicmp(&(joinServer->Eui),&(join_eeprom.Eui)) && get_EEPROM_type(k))
+                     {
+                         found=1;
+                         if(jsnumber==j)
+                         {
+                             js=k;
+                             joinServer->DevNonce=get_DevNonce(js);
+                             joinServer->JoinNonce=get_JoinNonce(js);
+                         };
+                         break;
+                     }
+                }
+                else
+                {
+                    if(!foundk)
+                    {
+                        foundk=1;
+                        kfree=k;
+                    }
+                }
+            }
+            if(!found && foundk)
+            {
+                put_Eui(kfree,&(joinServer->Eui));
+                joinServer->DevNonce=0;
+                put_DevNonce(kfree, joinServer->DevNonce);
+                joinServer->JoinNonce=0;
+                put_JoinNonce(kfree, joinServer->JoinNonce);
+                set_EEPROM_type(kfree);
+                if(jsnumber==j) 
+                {
+                    js=kfree;
+                }
+            }
         }
     }
-    else if(mode==MODE_DEVICE)
+    if(jlast!=js)
     {
-        set_s("JNUMBER",js);
-        joinName[4]=0x30+js;
-        set_s(joinName,&JoinEui);
-        if(euicmpz(&JoinEui)) return js;
-        for(uint8_t j=1;j<4;j++)
+        get_Eui(js,&(joinServer->Eui));
+        joinServer->DevNonce=get_DevNonce(js);
+        joinServer->JoinNonce=get_JoinNonce(js);
+    }
+    joinServer->js=js;
+    return js;
+}
+
+uint8_t get_Eui(uint8_t n,GenericEui_t* deveui)
+{
+    uint16_t dev_start=EUI_EEPROM_START+n*sizeof(EEPROM_Data_t);
+    uint8_t not_zero=0, not_ff=0;
+    for(uint8_t j=0;j<sizeof(GenericEui_t);j++)
+    {
+        deveui->buffer[j]=DATAEE_ReadByte(dev_start+j);
+        if(deveui->buffer[j]) not_zero=1;
+        if(deveui->buffer[j]!=0xFF) not_ff=1;
+    };
+    return (not_zero&not_ff);
+}
+
+uint8_t put_Eui(uint8_t n,GenericEui_t* deveui)
+{
+    uint16_t dev_start=EUI_EEPROM_START+n*sizeof(EEPROM_Data_t);
+    for(uint8_t j=0;j<sizeof(GenericEui_t);j++)
+    {
+        DATAEE_WriteByte(dev_start+j,deveui->buffer[j]);
+    };
+    return 0;
+}
+
+void put_DevNonce(uint8_t n, uint16_t devnonce)
+{
+    uint16_t dev_start=EUI_EEPROM_START+n*sizeof(EEPROM_Data_t)+sizeof(GenericEui_t);
+    DATAEE_WriteByte(dev_start,(uint8_t)(devnonce&0x00FF));
+    DATAEE_WriteByte(dev_start+1,(uint8_t)((devnonce&0xFF00)>>8));
+}
+
+uint16_t get_DevNonce(uint8_t n)
+{
+    uint16_t dev_start=EUI_EEPROM_START+n*sizeof(EEPROM_Data_t)+sizeof(GenericEui_t);
+    return ( (uint16_t)DATAEE_ReadByte(dev_start) | ((uint16_t)(DATAEE_ReadByte(dev_start+1)))<<8);
+}
+
+void put_JoinNonce(uint8_t n, uint16_t joinnonce)
+{
+    uint16_t dev_start=EUI_EEPROM_START+n*sizeof(EEPROM_Data_t)+sizeof(GenericEui_t)+2;
+    DATAEE_WriteByte(dev_start,(uint8_t)(joinnonce&0x00FF));
+    DATAEE_WriteByte(dev_start+1,(uint8_t)((joinnonce&0xFF00)>>8));
+}
+
+uint16_t get_JoinNonce(uint8_t n)
+{
+    uint16_t dev_start=EUI_EEPROM_START+n*sizeof(EEPROM_Data_t)+sizeof(GenericEui_t)+2;
+    return ( (uint16_t)DATAEE_ReadByte(dev_start) | ((uint16_t)(DATAEE_ReadByte(dev_start+1)))<<8);
+}
+
+uint32_t get_EEPROM_types()
+{
+    uint8_t t[4];
+    uint16_t dev_start=EUI_EEPROM_START-4;
+    for(uint8_t j=0;j<4;j++) t[j]=DATAEE_ReadByte(dev_start+j);
+    return *((uint32_t*)t);
+}
+
+void put_EEPROM_types(uint32_t t)
+{
+    uint16_t dev_start=EUI_EEPROM_START-4;
+    for(uint8_t j=0;j<4;j++) DATAEE_WriteByte(dev_start+j,((uint8_t*)(&t))[j]);
+}
+
+uint8_t get_EEPROM_type(uint8_t n)
+{
+    return (uint8_t)((EEPROM_types>>n)&0x00000001);
+}
+
+void set_EEPROM_type(uint8_t n)
+{
+    EEPROM_types|=(0x00000001)<<n;
+    put_EEPROM_types(EEPROM_types);
+}
+
+void clear_EEPROM_type(uint8_t n)
+{
+    EEPROM_types&=~((0x00000001)<<n);
+    put_EEPROM_types(EEPROM_types);
+}
+
+uint8_t fill_devices(void)
+{
+    char devName[9];
+    GenericEui_t devEui;
+    EEPROM_Data_t dev_eeprom;
+    uint8_t js=0,found=0,foundk=0,kfree;
+    EEPROM_types=get_EEPROM_types();
+    if(EEPROM_types==0xFFFFFFFF)
+    {
+        EEPROM_types=0;
+        put_EEPROM_types(EEPROM_types);
+    }
+    strcpy(devName,"DEV0EUI");
+    for(uint8_t j=1;j<7;j++)
+    {
+        devName[3]=0x30 + j;
+        set_s(devName,&devEui);
+        if(euicmpnz(&devEui))
         {
-            joinName[4]=0x30+j;
-            set_s(joinName,&JoinEui);
-            if(euicmpz(&JoinEui)) return j;
+            found=0;
+            foundk=0;
+            for(uint8_t k=0;k<MAX_EEPROM_RECORDS;k++)
+            {
+                if(get_Eui(k,&dev_eeprom)==1)
+                {
+                     if(euicmp(&devEui,&(dev_eeprom.Eui)) && !get_EEPROM_type(k))
+                     {
+                         found=1;
+                         break;
+                     }
+                }
+                else
+                {
+                    if(!foundk)
+                    {
+                        foundk=1;
+                        kfree=k;
+                    }
+                }
+            }
+            if(!found && foundk)
+            {
+                put_Eui(kfree,&devEui);
+                put_DevNonce(kfree,0);
+                put_JoinNonce(kfree,0);
+                clear_EEPROM_type(kfree);
+            }
         }
     }
+    js=0;
+    for(uint8_t j=0;j<MAX_EEPROM_RECORDS;j++)
+    {
+        if(get_Eui(j,&(devices[js].Eui))==1 && !get_EEPROM_type(j))
+        {
+            devices[js].DevNonce=get_DevNonce(j);
+            devices[js].JoinNonce=get_JoinNonce(j);
+            devices[js].js=j;
+            js++;
+        }
+    }
+    return js;
 }
 
 uint8_t LORAWAN_GetState(void)
