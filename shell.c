@@ -42,21 +42,22 @@ _par_t _pars[]={
     {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON",VISIBLE },
-    {PAR_UI8,"JSNumber",{ 0 }, "Select Join Server - 1, 2 or 3",VISIBLE },
-    {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack",VISIBLE },
-    {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",HIDDEN },
-    {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Dev1Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Dev2Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Dev3Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev4Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev4Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev5Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev5Eui 64",HIDDEN },
-    {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",HIDDEN },
-//    {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",HIDDEN },
-    {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",HIDDEN },
-    {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Join1Eui 64",HIDDEN },
-    {PAR_EUI64,"Join2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Join2Eui 64",HIDDEN },
-    {PAR_EUI64,"Join3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Join3Eui 64",HIDDEN },
+    {PAR_UI8,"JSNumber",{ 2 }, "Select Join Server - 1, 2 or 3",VISIBLE },
+    {PAR_UI32,"NetID",{ 0x00000000 }, "Network Id",VISIBLE },
+//    {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack",VISIBLE },
+    {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",VISIBLE  },
+    {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",VISIBLE },
+    {PAR_EUI64,"Dev1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Dev1Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Dev2Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Dev3Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev4Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev4Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev5Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev5Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",VISIBLE  },
+    {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",VISIBLE  },
+    {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Join1Eui 64",VISIBLE  },
+    {PAR_EUI64,"Join2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Join2Eui 64",VISIBLE  },
+    {PAR_EUI64,"Join3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Join3Eui 64",VISIBLE  },
     {0,NULL,{0},NULL}
 }; 
 
@@ -76,6 +77,7 @@ char ex[] = {"\r\nExit\r\n"};
 char commands[] = {'S', 'L', 'D'};
 char ver[]={"=== S2-LP shell v 1.1.5 ===\r\n"};
 uint8_t d[5];
+uint32_t EEPROM_types;
 
 void send_chars(char* x) {
     uint8_t i=0;
@@ -268,9 +270,53 @@ void Sync_EEPROM(void)
         }
         set_s("UID",&uid);
         set_uid(uid);
-        make_deveui();
         DATAEE_WriteByte(0x0000, 1);
     }
+    make_deveui();
+    EEPROM_types=get_EEPROM_types();
+    if(EEPROM_types==0xFFFFFFFF)
+    {
+        EEPROM_types=0;
+        put_EEPROM_types(EEPROM_types);
+    }
+}
+
+uint32_t get_EEPROM_types()
+{
+    uint8_t t[4];
+    uint16_t dev_start=EUI_EEPROM_START-4;
+    for(uint8_t j=0;j<4;j++) t[j]=DATAEE_ReadByte(dev_start+j);
+    return *((uint32_t*)t);
+}
+
+void put_EEPROM_types(uint32_t t)
+{
+    uint16_t dev_start=EUI_EEPROM_START-4;
+    for(uint8_t j=0;j<4;j++) DATAEE_WriteByte(dev_start+j,((uint8_t*)(&t))[j]);
+}
+
+uint8_t get_EEPROM_type(uint8_t n)
+{
+    return (uint8_t)((EEPROM_types>>n)&0x00000001);
+}
+
+void set_EEPROM_type(uint8_t n)
+{
+    EEPROM_types|=(0x00000001)<<n;
+    put_EEPROM_types(EEPROM_types);
+}
+
+void clear_EEPROM_type(uint8_t n)
+{
+    EEPROM_types&=~((0x00000001)<<n);
+    put_EEPROM_types(EEPROM_types);
+}
+
+void erase_EEPROM_Data(void)
+{
+    uint16_t dev_start=EUI_EEPROM_START-sizeof(EEPROM_types)-3;
+    uint16_t size=MAX_EEPROM_RECORDS*sizeof(EEPROM_Data_t)+sizeof(EEPROM_types)+3;
+    for(uint16_t j=0;j<size;j++) DATAEE_WriteByte(dev_start+j,0xFF);
 }
 
 
@@ -554,6 +600,7 @@ uint32_t get_did(void)
 void make_deveui(void)
 {
     get_mui(mui);
+    GenericEui_t deveui,joineui;
     for(uint8_t j=0;j<8;j++)
     {
         ui8tox(mui[j+2],b);
@@ -562,7 +609,38 @@ void make_deveui(void)
     }
     val_buf[16]=0;
     set_par("DEV0EUI",val_buf);
+    set_s("DEV0EUI",&deveui);
+    printVar("DeviceEui=",PAR_EUI64,&deveui,true,true);
     set_par("JOIN0EUI",val_buf);
+    set_s("JOIN0EUI",&joineui);
+    printVar("JoinEui=",PAR_EUI64,&joineui,true,true);
+}
+
+void printVar(char* text, par_type_t type, void* var, bool hex, bool endline)
+{
+    uint8_t j0=8;
+    send_chars(text);
+    switch(type)
+    {
+        case PAR_UI32:
+            if(hex) send_chars(ui32tox(*((uint32_t*)var),b)); else send_chars(ui32toa(*((uint32_t*)var),b));
+            break;
+        case PAR_I32:
+            if(hex) send_chars(i32tox(*((int32_t*)var),b)); else send_chars(i32toa(*((int32_t*)var),b));
+            break;
+        case PAR_UI8:
+            if(hex) send_chars(ui8tox(*((uint8_t*)var),b)); else send_chars(ui8toa(*((uint8_t*)var),b));
+            break;
+        case PAR_KEY128:
+            j0=16;
+        case PAR_EUI64:        
+            for(uint8_t j=0;j<j0;j++)
+            {
+                send_chars(" ");
+                if(hex) send_chars(ui8tox(((uint8_t*)var)[j],b)); else send_chars(((uint8_t*)var)[j]);
+            }
+    }
+    if(endline) send_chars("\r\n");
 }
 
 

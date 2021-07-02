@@ -108,6 +108,9 @@ extern char b[128];
 extern uint8_t mode;
 uint8_t tt0;
 uint32_t tt0_value=86400;
+extern Profile_t devices[MAX_EEPROM_RECORDS];
+extern uint8_t number_of_devices;
+
 
 
 /************************ PRIVATE FUNCTION PROTOTYPES *************************/
@@ -1043,7 +1046,11 @@ static void CreateAllSoftwareTimers (void)
     loRa.unconfirmedRetransmisionTimerId = SwTimerCreate();
     loRa.abpJoinTimerId = SwTimerCreate();
     loRa.dutyCycleTimerId = SwTimerCreate();
-    loRa.sendDownAckTimerId = SwTimerCreate();
+    for(uint8_t j=0;j<number_of_devices;j++)
+    {
+        devices[j].sendJoinAccept1TimerId=SwTimerCreate();
+        devices[j].sendWindow1TimerId=SwTimerCreate();
+    }
     tt0=SwTimerCreate();
 }
 
@@ -1059,7 +1066,11 @@ static void SetCallbackSoftwareTimers (void)
     SwTimerSetCallback(loRa.unconfirmedRetransmisionTimerId, UnconfirmedTransmissionCallback, 0);
     SwTimerSetCallback(loRa.abpJoinTimerId, UpdateJoinSuccessState, 0);
     SwTimerSetCallback(loRa.dutyCycleTimerId, DutyCycleCallback, 0);
-    SwTimerSetCallback(loRa.sendDownAckTimerId, LORAWAN_SendDownAckCallback, 0);
+    for(uint8_t j=0;j<number_of_devices;j++)
+    {
+        SwTimerSetCallback(devices[j].sendJoinAccept1TimerId,LORAWAN_SendJoinAcceptCallback,j);
+        SwTimerSetCallback(devices[j].sendWindow1TimerId,LORAWAN_SendDownAckCallback,j);
+    }
 }
 
 static void StopAllSoftwareTimers (void)
@@ -1074,7 +1085,11 @@ static void StopAllSoftwareTimers (void)
     SwTimerStop(loRa.unconfirmedRetransmisionTimerId);
     SwTimerStop(loRa.abpJoinTimerId);
 	SwTimerStop(loRa.dutyCycleTimerId);
-	SwTimerStop(loRa.sendDownAckTimerId);
+    for(uint8_t j=0;j<number_of_devices;j++)
+    {
+        SwTimerStop(devices[j].sendJoinAccept1TimerId);
+        SwTimerStop(devices[j].sendWindow1TimerId);
+    }
 	SwTimerStop(tt0);
 }
 

@@ -79,6 +79,15 @@ void make_deveui(void);
 void clear_uid(void);
 uint32_t read_uid(void);
 void write_uid(void);
+void printVar(char* text, par_type_t type, void* var, bool hex, bool endline);
+uint32_t get_EEPROM_types();
+void put_EEPROM_types(uint32_t t);
+uint8_t get_EEPROM_type(uint8_t n);
+void set_EEPROM_type(uint8_t n);
+void clear_EEPROM_type(uint8_t n);
+void erase_EEPROM_Data(void);
+
+
 
 #ifdef	__cplusplus
 }

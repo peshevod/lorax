@@ -114,7 +114,7 @@ typedef union
     struct
     {
         Mhdr_t mhdr;
-        uint8_t appNonce[3];
+        uint8_t joinNonce[3];
         uint8_t networkId[3];
         DeviceAddress_t deviceAddress;
         DlSettings_t DLSettings;
@@ -131,7 +131,7 @@ typedef union
         Mhdr_t mhdr;
         GenericEui_t JoinEui;
         GenericEui_t DevEui;
-        uint16_t DevNonce;
+        uint16_t devNonce;
     } members;
 } JoinRequest_t;
 
@@ -213,7 +213,8 @@ typedef struct
     bool abpJoinStatus;
     uint8_t abpJoinTimerId;
     uint8_t syncWord;
-    uint8_t sendDownAckTimerId;
+    uint8_t sendDownAck1TimerId;
+    uint8_t sendJoinAccept1TimerId;
 } LoRa_t;
 
 void ConfigureRadioTx(uint8_t dataRate, uint32_t freq);

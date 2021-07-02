@@ -137,6 +137,34 @@ typedef union
     };
 } LorawanStatus_t;
 
+typedef union
+{
+    uint32_t value;
+    uint8_t buffer[4];
+} DeviceAddress_t;
+
+//activation parameters
+typedef union
+{
+    uint32_t value;
+    struct
+    {
+        uint16_t valueLow;
+        uint16_t valueHigh;
+    } members;
+} FCnt_t;
+
+typedef union
+{
+    uint8_t value;
+    struct
+    {
+        uint8_t rx2DataRate     : 4;
+        uint8_t rx1DROffset     : 3;
+        uint8_t rfu             : 1;
+    }bits;
+} DlSettings_t;
+
 //union used for instantiation of DeviceEui and Application Eui
 typedef union
 {
@@ -152,17 +180,35 @@ typedef struct
 {
     GenericEui_t Eui;
     uint16_t DevNonce;
-    uint16_t JoinNonce;
 } EEPROM_Data_t;
+
+typedef union
+{
+    uint8_t value;
+    struct
+    {
+        uint8_t joining : 1;
+        uint8_t joined  : 1;
+        uint8_t rfu     : 6;
+    } states;
+} DeviceStatus_t;
 
 typedef struct
 {
     GenericEui_t Eui;
     uint16_t DevNonce;
-    uint16_t JoinNonce;
     uint8_t js;
     uint8_t NwkSKey[16];
     uint8_t AppSKey[16];
+    DeviceAddress_t DevAddr;
+    DlSettings_t DlSettings;
+    uint8_t rxDelay;
+//    uint8_t cfList[16];
+    FCnt_t fCntUp;
+    FCnt_t fCntDown;
+    DeviceStatus_t status;
+    uint8_t sendJoinAccept1TimerId;
+    uint8_t sendWindow1TimerId;
 } Profile_t;
 
 /*************************** FUNCTIONS PROTOTYPE ******************************/
@@ -1596,6 +1642,7 @@ void LORAWAN_Mainloop (void);
 void print_error(LorawanError_t err);
 
 void LORAWAN_SendDownAckCallback (uint8_t param);
+void LORAWAN_SendJoinAcceptCallback (uint8_t param);
 void LORAWAN_Receive(void);
 uint8_t selectJoinServer(Profile_t* joinServer);
 uint8_t euicmpnz(GenericEui_t* eui);
@@ -1607,13 +1654,12 @@ uint8_t get_Eui(uint8_t n,GenericEui_t* deveui);
 uint8_t put_Eui(uint8_t n,GenericEui_t* deveui);
 void put_DevNonce( uint8_t n, uint16_t devnonce);
 uint16_t get_DevNonce(uint8_t n);
-void put_JoinNonce(uint8_t n, uint16_t joinnonce);
-uint16_t get_JoinNonce(uint8_t n);
-uint32_t get_EEPROM_types();
-void put_EEPROM_types(uint32_t t);
-uint8_t get_EEPROM_type(uint8_t n);
-void set_EEPROM_type(uint8_t n);
-void clear_EEPROM_type(uint8_t n);
+void put_JoinNonce(uint8_t* joinnonce);
+void get_JoinNonce(uint8_t* joinnonce);
+void get_NetID(uint8_t* netid);
+void calculate_NwkID(void);
+void get_nextDevAddr(DeviceAddress_t* devaddr);
+void getinc_JoinNonce(uint8_t* joinnonce);
 
 
 

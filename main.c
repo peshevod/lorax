@@ -107,6 +107,9 @@ extern uint8_t mui[16];
 extern uint8_t js_number;
 extern Profile_t joinServer;
 extern uint8_t number_of_devices;
+extern uint32_t NetID;
+extern uint8_t DevAddr[4];
+
 
 char* errors[] = {
     "OK",
@@ -283,6 +286,7 @@ void main(void)
     //INTERRUPT_GlobalInterruptDisable();
 
 //    clear_uid();
+//    erase_EEPROM_Data();    
     Sync_EEPROM();
     SystemTimerInit();
     TMR_ISR_Lora_Init();
@@ -375,10 +379,10 @@ void main(void)
 //            LORAWAN_SetDeviceAddress(devAddr);
             set_s("DEV0EUI",&DevEui);
             LORAWAN_SetDeviceEui(&DevEui);
-            js_number=selectJoinServer(&joinServer);
             LORAWAN_SetJoinEui(&(joinServer.Eui));
             set_s("APPKEY",appkey);
             LORAWAN_SetApplicationKey(appkey);
+            js_number=selectJoinServer(&joinServer);
             LORAWAN_Join(OTAA);
             SwTimerStart(t0);
             
@@ -445,29 +449,31 @@ void main(void)
             send_chars("Network Server\r\n");
 
             SysConfigSleep();
-    
-            LORAWAN_SetDeviceEui(&mui[2]);
+            set_s("NETID",&NetID);
+            printVar("NetID=",PAR_UI32,&NetID,true,true);
+            calculate_NwkID();
+            get_nextDevAddr(DevAddr);
+//            LORAWAN_SetDeviceEui(&mui[2]);
             number_of_devices=fill_devices();
+            printVar("Number of Devices=",PAR_UI8,&number_of_devices,false,true);
             set_s("JOIN0EUI",&JoinEui);
+            printVar("JoinEui=",PAR_EUI64,&JoinEui,true,true);
             LORAWAN_SetDeviceEui(&JoinEui);
+            set_s("APPKEY",appkey);
+            LORAWAN_SetApplicationKey(appkey);
             LORAWAN_Init(RxDataDone, RxJoinResponse);
             LORAWAN_SetActivationType(OTAA);
 //            LORAWAN_SetNetworkSessionKey(nwkSKey);
 //            LORAWAN_SetApplicationSessionKey(appSKey);
 //            LORAWAN_SetDeviceAddress(devAddr);
 //            LORAWAN_Join(ABP);
-            // Wait for Join response
-            while(endDeviceJoinedFlag == false)
-            {
-                LORAWAN_Mainloop();        
-            }
             // Application main loop
             while (1)
             {   
                 // Stack management
                 LORAWAN_Mainloop();
                 
-                if(LORAWAN_GetState() == IDLE)
+                if(LORAWAN_GetState() == IDLE || LORAWAN_GetState() == BEFORE_TX1 || LORAWAN_GetState() == BEFORE_ACK )
                 {
                     LORAWAN_Receive();
                 }

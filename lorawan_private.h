@@ -102,6 +102,8 @@ extern "C" {
 #define ABP_TIMEOUT_MS                          20    
 
 #define JA_APP_NONCE_SIZE                       3    
+#define JA_JOIN_NONCE_SIZE                      3    
+#define JA_DEV_NONCE_SIZE                       2    
 #define JA_NET_ID_SIZE                          3
 
 #define MAX_FOPTS_LEN                           0x0F
@@ -109,8 +111,8 @@ extern "C" {
 #define DEVICE_EEPROM                           1
 #define JOINSERVER_EEPROM                       0
     
-#define EUI_EEPROM_START                        0x0280
 #define MAX_EEPROM_RECORDS                      32    
+#define EUI_EEPROM_START                        0x02C0
 
 /***************************** TYPEDEFS ***************************************/
     
@@ -138,6 +140,7 @@ typedef enum
     CLASS_C_RX2_1_OPEN          ,
     CLASS_C_RX2_2_OPEN          ,
     BEFORE_ACK                  ,
+    BEFORE_TX1                  ,        
 } LoRaMacState_t;   
 
 // types of frames
@@ -164,23 +167,6 @@ typedef enum
     NEW_CHANNEL_CID             = 0x07,
     RX_TIMING_SETUP_CID         = 0x08,
 }LoRaMacCid_t;
-
-//activation parameters
-typedef union
-{
-    uint32_t value;
-    uint8_t buffer[4];
-} DeviceAddress_t;
-
-typedef union
-{
-    uint32_t value;
-    struct
-    {
-        uint16_t valueLow;
-        uint16_t valueHigh;
-    } members;
-} FCnt_t;
 
 typedef struct
 {
@@ -234,17 +220,6 @@ typedef union
         uint8_t MacCommands[15] ;
     }members;
 } Hdr_t;
-
-typedef union
-{
-    uint8_t value;
-    struct
-    {
-        uint8_t rx2DataRate     : 4;
-        uint8_t rx1DROffset     : 3;
-        uint8_t rfu             : 1;
-    }bits;
-} DlSettings_t;
 
 //Protocol parameters
 typedef struct

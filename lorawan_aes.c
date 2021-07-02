@@ -37,3 +37,10 @@ void AESEncodeLoRa(unsigned char* block, unsigned char* key)
     memcpy(useKey, key, sizeof(useKey));
     AESEncode(block, useKey);
 }
+
+void AESDecodeLoRa(unsigned char* block, unsigned char* key)
+{
+    uint8_t useKey[16];
+    memcpy(useKey, key, sizeof(useKey));
+    AESDecode(block, useKey);
+}

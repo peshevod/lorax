@@ -45,6 +45,7 @@ extern "C" {
 
 /*************************** FUNCTIONS PROTOTYPE ******************************/
 void AESEncodeLoRa(unsigned char* block, unsigned char* key);
+void AESDecodeLoRa(unsigned char* block, unsigned char* key);
 
 
 #ifdef	__cplusplus

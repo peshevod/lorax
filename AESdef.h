@@ -29,5 +29,6 @@
  
 // CHANGE
 #define ENCODE
+#define DECODE
 
 #endif  // _AESDEF_H
