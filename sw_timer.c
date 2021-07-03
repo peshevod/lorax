@@ -44,6 +44,7 @@
 #include "mcc_lora_config.h"
 #include "mcc_generated_files/interrupt_manager.h"
 #include "mcc_generated_files/mcc.h"
+#include "shell.h"
 
 #define TIMER_CORRECTION_TICKS          32
 
@@ -167,6 +168,7 @@ uint8_t SwTimerCreate(void)
     }
     else
     {
+        send_chars("Allocated > MAX_TIMERS\r\n");
         while(1)
         {
             // If you reach this spot it means the MAX_TIMERS is #defined to a

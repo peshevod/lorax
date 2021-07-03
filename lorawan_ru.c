@@ -212,6 +212,14 @@ void LORAWAN_Reset (IsmBand_t ismBandNew)
     //flags all 0-es
     loRa.macStatus.value = 0;
     loRa.lorawanMacStatus.value = 0;
+    for(uint8_t j=0;j<number_of_devices;j++)
+    {
+        devices[j].macStatus.value = 0;
+        devices[j].lorawanMacStatus.value = 0;
+        devices[j].fCntDown.value = 0;
+        devices[j].fCntUp.value = 0;
+        devices[j].DevNonce = 0;
+    }
 
     loRa.maxRepetitionsConfirmedUplink = 7; // 7 retransmissions should occur for each confirmed frame sent until ACK is received
     loRa.maxRepetitionsUnconfirmedUplink = 0; // 0 retransmissions should occur for each unconfirmed frame sent until a response is received
@@ -558,8 +566,8 @@ void LORAWAN_RxTimeout(void)
                 if(SwTimerIsRunning(tt0))
                 {
                     ticks = SwTimerReadValue (tt0);
-                    send_chars("RxTimeout=");
-                    send_chars(ui32toa(tt0_value-TICKS_TO_MS(ticks),b));
+                    uint32_t dticks=tt0_value-TICKS_TO_MS(ticks);
+                    printVar(" RX1Timeout=",PAR_UI32,&dticks,false,false);
                     send_chars(" ms\r\n");
                     SwTimerStop(tt0);
                 }
@@ -572,6 +580,7 @@ void LORAWAN_RxTimeout(void)
         else
         {
         // if last message sent was a join request, the join was not accepted after the second window expired
+            send_chars(" RX2Timeout\r\n");
             if (loRa.lorawanMacStatus.joining == 1)
             {
                 SetJoinFailState();
@@ -1403,13 +1412,13 @@ void ConfigureRadioTx(uint8_t dataRate, uint32_t freq)
     {
         txPower = txPower868[loRa.txPower];
     }
-    send_chars("F=");
+/*    send_chars("F=");
     send_chars(ui32toa(freq,b));
     send_chars(" dataRate=");
     send_chars(ui8toa(dataRate,b));
     send_chars(" power=");
     send_chars(i32toa((int32_t)txPower,b));
-    send_chars("\r\n");
+    send_chars("\r\n");*/
     RADIO_SetOutputPower (txPower);
     
     if(mode==MODE_NETWORK_SERVER)

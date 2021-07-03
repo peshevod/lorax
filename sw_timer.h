@@ -48,7 +48,7 @@ extern "C" {
 #include <stdint.h>
 #include "lorawan_defs.h"
 
-#define MAX_TIMERS                  20
+#define MAX_TIMERS                  30
 
 // Set 8-bit timer0 as source for timer1 and period for timer0 30,5 us(source HFINTOSC 32 MHz, prescaler 1:4, TMR0H 0xF3),
 // then divider must change from 2^12/125UL to 2000/61

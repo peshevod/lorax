@@ -70,6 +70,9 @@ uint8_t appkey[16];
 
 
 uint8_t endDeviceJoinedFlag = false;
+uint8_t startDeviceJoinedFlag = true;
+uint32_t joinInterval;
+uint8_t JoinIntervalTimerId;
 bool readAndSendFlag = true;
 
 void RxDataDone(uint8_t* pData, uint8_t dataLength, OpStatus_t status);
@@ -82,6 +85,7 @@ void LoRaWakeUp(void);
 uint8_t computeSensorPercent (uint16_t sensorValueToCompute);
 void readAndSend(void);
 void print_array(uint8_t* array);
+void StartJoinProcedure(uint8_t param);
 
 
 uint8_t localDioStatus;
@@ -109,6 +113,7 @@ extern Profile_t joinServer;
 extern uint8_t number_of_devices;
 extern uint32_t NetID;
 extern uint8_t DevAddr[4];
+extern Profile_t devices[MAX_EEPROM_RECORDS];
 
 
 char* errors[] = {
@@ -379,19 +384,30 @@ void main(void)
 //            LORAWAN_SetDeviceAddress(devAddr);
             set_s("DEV0EUI",&DevEui);
             LORAWAN_SetDeviceEui(&DevEui);
-            LORAWAN_SetJoinEui(&(joinServer.Eui));
             set_s("APPKEY",appkey);
             LORAWAN_SetApplicationKey(appkey);
             js_number=selectJoinServer(&joinServer);
-            LORAWAN_Join(OTAA);
-            SwTimerStart(t0);
+            LORAWAN_SetJoinEui(&(joinServer.Eui));
+
             
 //            LORAWAN_SetChannelIdStatus (0, DISABLED);
 //            LORAWAN_SetChannelIdStatus (1, DISABLED);
     
             // Wait for Join response
+            JoinIntervalTimerId=SwTimerCreate();
+            SwTimerSetCallback(JoinIntervalTimerId,StartJoinProcedure,0);
+            StartJoinProcedure(0);
+            startDeviceJoinedFlag = false;
+
             while(endDeviceJoinedFlag == false)
             {
+                if(startDeviceJoinedFlag)
+                {
+                    joinInterval=Random(UINT16_MAX);
+                    SwTimerSetTimeout(JoinIntervalTimerId, MS_TO_TICKS(joinInterval));
+                    SwTimerStart(JoinIntervalTimerId);
+                    startDeviceJoinedFlag=false;
+                }
                 LORAWAN_Mainloop();        
             }
 
@@ -456,12 +472,12 @@ void main(void)
 //            LORAWAN_SetDeviceEui(&mui[2]);
             number_of_devices=fill_devices();
             printVar("Number of Devices=",PAR_UI8,&number_of_devices,false,true);
+            LORAWAN_Init(RxDataDone, RxJoinResponse);
             set_s("JOIN0EUI",&JoinEui);
             printVar("JoinEui=",PAR_EUI64,&JoinEui,true,true);
             LORAWAN_SetDeviceEui(&JoinEui);
             set_s("APPKEY",appkey);
             LORAWAN_SetApplicationKey(appkey);
-            LORAWAN_Init(RxDataDone, RxJoinResponse);
             LORAWAN_SetActivationType(OTAA);
 //            LORAWAN_SetNetworkSessionKey(nwkSKey);
 //            LORAWAN_SetApplicationSessionKey(appSKey);
@@ -473,10 +489,24 @@ void main(void)
                 // Stack management
                 LORAWAN_Mainloop();
                 
-                if(LORAWAN_GetState() == IDLE || LORAWAN_GetState() == BEFORE_TX1 || LORAWAN_GetState() == BEFORE_ACK )
+                uint8_t state,rec_ready=1;
+                for(uint8_t j=0;j<number_of_devices;j++)
+                {
+                    state=devices[j].macStatus.macState;
+                    if(state != IDLE && state != BEFORE_TX1 && state != BEFORE_ACK )
+                    {
+                        rec_ready=0;
+                        break;
+                    }
+                }
+                if(rec_ready && (LORAWAN_GetState()!=RXCONT && LORAWAN_GetState()!=TRANSMISSION_OCCURRING))
                 {
                     LORAWAN_Receive();
                 }
+//                else
+//                {
+//                   printVar("State=",PAR_UI8,&state,false,true); 
+//                }
     
 //                if(LoRa_CanSleep())
 //                {
@@ -496,8 +526,24 @@ void RxDataDone(uint8_t* pData, uint8_t dataLength, OpStatus_t status)
 
 void RxJoinResponse(bool status)
 {
-    endDeviceJoinedFlag = true;
+    if(status)
+    {
+        send_chars("Joining Procedure Successfully ended\r\n");
+        endDeviceJoinedFlag = true;
+    }
+    else
+    {
+        send_chars("Joining Procedure Failed\r\n");
+        startDeviceJoinedFlag = true;
+    }
 }
+
+void StartJoinProcedure(uint8_t param)
+{
+    endDeviceJoinedFlag = false;
+    LORAWAN_Join(OTAA);    
+}
+
 
 void handle16sInterrupt() {
     static volatile uint8_t counterSleepTimeout = RESET;

@@ -42,5 +42,6 @@ void AESDecodeLoRa(unsigned char* block, unsigned char* key)
 {
     uint8_t useKey[16];
     memcpy(useKey, key, sizeof(useKey));
+    AESCalcDecodeKey(useKey);
     AESDecode(block, useKey);
 }

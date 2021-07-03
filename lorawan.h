@@ -45,10 +45,10 @@ extern "C" {
 /****************************** DEFINES ***************************************/
 
 // Recommended protocol parameters
-//#define RECEIVE_DELAY1                              1000UL
-//#define RECEIVE_DELAY2                              2000UL
 #define RECEIVE_DELAY1                              1000UL
-#define RECEIVE_DELAY2                              10000UL
+#define RECEIVE_DELAY2                              2000UL
+//#define RECEIVE_DELAY1                              1000UL
+//#define RECEIVE_DELAY2                              10000UL
 #define JOIN_ACCEPT_DELAY1                          5000UL
 #define JOIN_ACCEPT_DELAY2                          6000UL
 #define MAX_FCNT_GAP                                16384
@@ -139,6 +139,20 @@ typedef union
 
 typedef union
 {
+    uint16_t value;
+    struct
+    {
+        unsigned ackRequiredFromNextDownlinkMessage:1;  //if set, the next downlink message should have the ACK bit set because an ACK is needed for the end device
+        unsigned ackRequiredFromNextUplinkMessage:1;    //if set, the next uplink message should have the ACK bit set because an ACK is needed for the server
+        unsigned joining: 1;
+        unsigned fPending:1;
+        unsigned adrAckRequest:1;
+        unsigned synchronization:1;                     //if set, there is no need to send immediately a packet because the application sent one from the callback
+    };
+} LorawanMacStatus_t;
+
+typedef union
+{
     uint32_t value;
     uint8_t buffer[4];
 } DeviceAddress_t;
@@ -209,6 +223,10 @@ typedef struct
     DeviceStatus_t status;
     uint8_t sendJoinAccept1TimerId;
     uint8_t sendWindow1TimerId;
+    LorawanMacStatus_t lorawanMacStatus;
+    LorawanStatus_t macStatus;
+    uint8_t macBuffer[32];
+    uint8_t bufferIndex;
 } Profile_t;
 
 /*************************** FUNCTIONS PROTOTYPE ******************************/

@@ -599,11 +599,9 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
     RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
     send_chars(MODULATION_LORA == RadioConfiguration.modulation ? "LORA " : "FSK ");
     RADIO_WriteFrequency(RadioConfiguration.frequency);
-    send_chars("F=");
-    send_chars(ui32toa(RadioConfiguration.frequency,b));
+    printVar("F=",PAR_UI32,&RadioConfiguration.frequency,false,false);
     RADIO_WritePower(RadioConfiguration.outputPower);
-    send_chars(" P=");
-    send_chars(i32toa(RadioConfiguration.outputPower,b));
+    printVar(" P=",PAR_UI8,&RadioConfiguration.outputPower,false,false);
 
     if (MODULATION_LORA == RadioConfiguration.modulation)
     {
@@ -618,11 +616,8 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
                 (RadioConfiguration.dataRate << SHIFT4) |
                 ((RadioConfiguration.crcOn & 0x01) << SHIFT2) |
                 ((symbolTimeout & 0x0300) >> SHIFT8));
-        send_chars(" sf=");
-        send_chars(ui8toa(RadioConfiguration.dataRate,b));
-        send_chars(" crc=");
-        send_chars(ui8toa(RadioConfiguration.crcOn,b));
-                
+        printVar(" SF=",PAR_UI8,&RadioConfiguration.dataRate,false,false);
+        printVar(" CRC=",PAR_UI8,&RadioConfiguration.crcOn,false,false);             
 
         // Handle frequency hopping, if necessary
         if (0 != RadioConfiguration.frequencyHopPeriod)
@@ -729,8 +724,7 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
             regValue &= ~(1 << SHIFT6);
         }    // Set InvertIQ bit if needed   
         RADIO_RegisterWrite(REG_LORA_INVERTIQ, regValue);
-        send_chars(" IQInv=");
-        send_chars(ui8toa(RadioConfiguration.iqInverted,b));
+        printVar(" IQInv=",PAR_UI8,&RadioConfiguration.iqInverted,false,false);             
         
         regValue = REG_LORA_INVERTIQ2_VALUE_OFF & (~((RadioConfiguration.iqInverted & 0x01) << SHIFT2));
         RADIO_RegisterWrite(REG_LORA_INVERTIQ2, regValue);
@@ -942,7 +936,7 @@ RadioError_t RADIO_Transmit(uint8_t *buffer, uint8_t bufferLen)
     // If accurate timing of the time on air is required, the simplest way to
     // achieve it is to change this to a blocking mode switch.
     RADIO_WriteMode(MODE_TX, RadioConfiguration.modulation, 0);
-    send_chars("Transmit start\r\n");
+    send_chars("Transmit start ");
 
     // Set timeout to some very large value since the timer counts down.
     // Leaving the callback uninitialized it will assume the default value of
@@ -1027,7 +1021,7 @@ RadioError_t RADIO_ReceiveStart(uint16_t rxWindowSize)
             SwTimerStart(RadioConfiguration.fskRxWindowTimerId);
         }
     }
-    send_chars("Receiving start...\r\n");
+    send_chars("Receiving start... ");
 
     if (0 != RadioConfiguration.watchdogTimerTimeout)
     {
@@ -1062,6 +1056,19 @@ static void RADIO_RxDone(void)
         
         // Read CRC info from received packet header
         i = RADIO_RegisterRead(REG_LORA_HOPCHANNEL);
+        rssi_reg=RADIO_RegisterRead(REG_LORA_PKTRSSIVALUE);
+        RadioConfiguration.packetSNR = RADIO_RegisterRead(REG_LORA_PKTSNRVALUE);
+        RadioConfiguration.packetSNR /= (int8_t)4;
+        SwTimersInterrupt();
+        if(SwTimerIsRunning(rectimer))
+        {
+            ticks=MS_TO_TICKS(rectimer_value)-SwTimerReadValue(rectimer);
+            delta=TICKS_TO_MS(ticks-ticks_old);
+            ticks_old=ticks;
+            uint32_t SNR=RadioConfiguration.packetSNR;
+            printVar(" Received! delta=",PAR_UI32,&delta,false,false);
+            printVar(" snr=",PAR_I32,&SNR,false,false);
+        }
         if ((0 == RadioConfiguration.crcOn) || ((0 == (irqFlags & (1<<SHIFT5))) && (0 != (i & (1<<SHIFT6)))))
         {
             // ValidHeader and RxDone are set from the initial if condition.
@@ -1082,34 +1089,18 @@ static void RADIO_RxDone(void)
             }
             HALSPICSDeassert();
             RadioConfiguration.flags |= RADIO_FLAG_RXDATA;
-
-            rssi_reg=RADIO_RegisterRead(REG_LORA_PKTRSSIVALUE);
-            RadioConfiguration.packetSNR = RADIO_RegisterRead(REG_LORA_PKTSNRVALUE);
-            RadioConfiguration.packetSNR /= (int8_t)4;
-
-            SwTimersInterrupt();
-            if(SwTimerIsRunning(rectimer))
-            {
-                ticks=MS_TO_TICKS(rectimer_value)-SwTimerReadValue(rectimer);
-                delta=TICKS_TO_MS(ticks-ticks_old);
-                ticks_old=ticks;
-                send_chars("Received! delta=");
-                send_chars(ui32toa(delta,b));
-                send_chars(" snr=");
-                send_chars(i32toa((int32_t)RadioConfiguration.packetSNR,b));
-                send_chars("\r\n");
-            }
+            send_chars(" CRC OK");
         }
         else
         {
             // CRC required and CRC error found.
             RadioConfiguration.flags |= RADIO_FLAG_RXERROR;
-            send_chars("***Received with CRC error!!!\r\n");
+            send_chars(" CRC Error!");
         }
+        send_chars("\r\n");
         RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
         RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
-        if(mode==MODE_DEVICE) LORAWAN_RxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
-        else if(mode==MODE_NETWORK_SERVER) LORAWAN_NSRxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
+        if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
         else LORAX_RxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
     }
 }
@@ -1182,7 +1173,7 @@ static void RADIO_RxTimeout(void)
     RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
     RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
 
-    send_chars("RX Timeout\r\n");
+    send_chars(" RXTimeout");
     if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxTimeout();
     else
         LORAX_RxTimeout();

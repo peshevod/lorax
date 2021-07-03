@@ -42,12 +42,12 @@ _par_t _pars[]={
     {PAR_UI8,"Y",{ 0x01 }, "JP4 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP4 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"Z",{ 0x02 }, "JP5 mode, 0-inactive, 1 - change status, 2 - if alarm - non-stop, 0x04 bit: if set JP5 1 - norm, 0 - alarm",VISIBLE },
     {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON",VISIBLE },
-    {PAR_UI8,"JSNumber",{ 2 }, "Select Join Server - 1, 2 or 3",VISIBLE },
+    {PAR_UI8,"JSNumber",{ 1 }, "Select Join Server - 1, 2 or 3",VISIBLE },
     {PAR_UI32,"NetID",{ 0x00000000 }, "Network Id",VISIBLE },
-//    {PAR_I32,"RX1_offset",{ 0 }, "Offset(ms) to send ack",VISIBLE },
+    {PAR_I32,"RX1_offset",{ -75 }, "Offset(ms) to send ack",VISIBLE },
     {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",VISIBLE  },
     {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",VISIBLE },
-    {PAR_EUI64,"Dev1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Dev1Eui 64",VISIBLE  },
+    {PAR_EUI64,"Dev1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x19,0x00,0x70}}, "Dev1Eui 64",VISIBLE  },
     {PAR_EUI64,"Dev2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Dev2Eui 64",VISIBLE  },
     {PAR_EUI64,"Dev3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Dev3Eui 64",VISIBLE  },
     {PAR_EUI64,"Dev4Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev4Eui 64",VISIBLE  },
@@ -55,9 +55,10 @@ _par_t _pars[]={
     {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",VISIBLE  },
     {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",VISIBLE  },
     {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",VISIBLE  },
-    {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x90,0x00,0x70}}, "Join1Eui 64",VISIBLE  },
+    {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x19,0x00,0x70}}, "Join1Eui 64",VISIBLE  },
     {PAR_EUI64,"Join2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Join2Eui 64",VISIBLE  },
     {PAR_EUI64,"Join3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Join3Eui 64",VISIBLE  },
+    {PAR_UI8,"Erase_EEPROM",{0},"If set erase EEPROM",HIDDEN},
     {0,NULL,{0},NULL}
 }; 
 
@@ -319,6 +320,11 @@ void erase_EEPROM_Data(void)
     for(uint16_t j=0;j<size;j++) DATAEE_WriteByte(dev_start+j,0xFF);
 }
 
+void erase_ALL_EEPROM(void)
+{
+    for(uint16_t j=0;j<0x3FF;j++) DATAEE_WriteByte(j,0xFF);
+}
+
 
 
 void _print_par(_par_t* par)
@@ -414,6 +420,11 @@ uint8_t set_par(char* par, char* val_buf)
     {
         if(parcmp(__pars->c,par,0))
         {
+            if(!strcmp(__pars->c,"Erase_EEPROM"))
+            {
+                erase_EEPROM_Data();
+                return 0;
+            }
             if(__pars->type==PAR_UI32)
             {
                 if (stringToUInt32(val_buf, &(__pars->u.ui32par))) return 1;

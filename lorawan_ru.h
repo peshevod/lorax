@@ -147,20 +147,6 @@ typedef struct
         uint8_t parametersDefined;
 } ChannelParams_t;
 
-typedef union
-{
-    uint16_t value;
-    struct
-    {
-        unsigned ackRequiredFromNextDownlinkMessage:1;  //if set, the next downlink message should have the ACK bit set because an ACK is needed for the end device
-        unsigned ackRequiredFromNextUplinkMessage:1;    //if set, the next uplink message should have the ACK bit set because an ACK is needed for the server
-        unsigned joining: 1;
-        unsigned fPending:1;
-        unsigned adrAckRequest:1;
-        unsigned synchronization:1;                     //if set, there is no need to send immediately a packet because the application sent one from the callback
-    };
-} LorawanMacStatus_t;
-
 typedef struct
 {
     LorawanMacStatus_t lorawanMacStatus;

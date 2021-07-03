@@ -30,5 +30,6 @@
 // CHANGE
 #define ENCODE
 #define DECODE
+#define calcKey
 
 #endif  // _AESDEF_H
