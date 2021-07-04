@@ -43,6 +43,7 @@ extern "C" {
     
 #include <xc.h>
 #include "lorawan_defs.h"
+#include "lorawan_types.h"
 
 /****************************** DEFINES ***************************************/     
 
@@ -107,101 +108,6 @@ extern "C" {
 #define DUTY_CYCLE_DEFINED                  0x04
     
 /***************************** TYPEDEFS ***************************************/    
-
-typedef union
-{
-    uint8_t joinAcceptCounter[29];
-    struct
-    {
-        Mhdr_t mhdr;
-        uint8_t joinNonce[3];
-        uint8_t networkId[3];
-        DeviceAddress_t deviceAddress;
-        DlSettings_t DLSettings;
-        uint8_t rxDelay;
-        uint8_t cfList[16];
-    } members;
-} JoinAccept_t;
-
-typedef union
-{
-    uint8_t joinRequestCounter[19];
-    struct
-    {
-        Mhdr_t mhdr;
-        GenericEui_t JoinEui;
-        GenericEui_t DevEui;
-        uint16_t devNonce;
-    } members;
-} JoinRequest_t;
-
-//Channel parameters
-typedef struct
-{
-        uint32_t frequency;
-        bool status;
-        DataRange_t dataRange;
-        uint16_t dutyCycle;
-        uint32_t channelTimer;
-        bool joinRequestChannel;
-        uint8_t parametersDefined;
-} ChannelParams_t;
-
-typedef struct
-{
-    LorawanMacStatus_t lorawanMacStatus;
-    LorawanStatus_t macStatus;
-    FCnt_t fCntUp;
-    FCnt_t fCntDown;
-    FCnt_t fMcastCntDown;
-    LoRaClass_t deviceClass;
-    ReceiveWindowParameters_t receiveWindow1Parameters;
-    ReceiveWindowParameters_t receiveWindow2Parameters;
-    ActivationParameters_t activationParameters;
-    ChannelParams_t channelParameters;
-    ProtocolParams_t protocolParameters;
-    IsmBand_t ismBand;
-    LorawanMacKeys_t macKeys;
-    uint8_t crtMacCmdIndex;
-    LorawanCommands_t macCommands[MAX_NB_CMD_TO_PROCESS];
-    uint32_t lastTimerValue;
-    uint32_t periodForLinkCheck;
-    uint16_t adrAckCnt;
-    uint16_t devNonce;
-    uint16_t lastPacketLength;
-    uint8_t maxRepetitionsUnconfirmedUplink;
-    uint8_t maxRepetitionsConfirmedUplink;
-    uint8_t counterRepetitionsUnconfirmedUplink;
-    uint8_t counterRepetitionsConfirmedUplink;
-    uint8_t lastUsedChannelIndex;
-    uint16_t prescaler;
-    uint8_t linkCheckMargin;
-    uint8_t linkCheckGwCnt;
-    uint8_t currentDataRate;
-    uint8_t batteryLevel;
-    uint8_t txPower;
-    uint8_t joinAccept1TimerId;
-    uint8_t joinAccept2TimerId;
-    uint8_t receiveWindow1TimerId;
-    uint8_t receiveWindow2TimerId;
-    uint8_t automaticReplyTimerId;
-    uint8_t linkCheckTimerId;
-    uint8_t ackTimeoutTimerId;
-    uint8_t dutyCycleTimerId;
-    uint8_t unconfirmedRetransmisionTimerId;
-    uint8_t minDataRate;
-    uint8_t maxDataRate;
-    uint8_t maxChannels;
-    uint8_t counterAdrAckDelay;
-    uint8_t offset;
-    bool macInitialized;
-    bool rx2DelayExpired;
-    bool abpJoinStatus;
-    uint8_t abpJoinTimerId;
-    uint8_t syncWord;
-    uint8_t sendDownAck1TimerId;
-    uint8_t sendJoinAccept1TimerId;
-} LoRa_t;
 
 void ConfigureRadioTx(uint8_t dataRate, uint32_t freq);
 

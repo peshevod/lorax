@@ -1,14 +1,11 @@
 #include "mcc_generated_files/uart1.h"
 #include "mcc_generated_files/mcc.h"
+#include "sw_timer.h"
 #include "shell.h"
-#include "mcc_lora_config.h"
 #include <string.h>
 #include <stdio.h>
-#include "sw_timer.h"
 #include <xc.h>
-#include "mcc_generated_files/memory.h"
-#include "lorawan.h"
-#include "lorawan_private.h"
+#include "eeprom.h"
 
 __EEPROM_DATA(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
 
@@ -44,7 +41,7 @@ _par_t _pars[]={
     {PAR_UI8,"SPI_Trace",{ 0 }, "Tracing SPI 0:OFF 1:ON",VISIBLE },
     {PAR_UI8,"JSNumber",{ 1 }, "Select Join Server - 1, 2 or 3",VISIBLE },
     {PAR_UI32,"NetID",{ 0x00000000 }, "Network Id",VISIBLE },
-    {PAR_I32,"RX1_offset",{ -75 }, "Offset(ms) to send ack",VISIBLE },
+    {PAR_I32,"RX1_offset",{ -40 }, "Offset(ms) to send ack",VISIBLE },
     {PAR_KEY128,"AppKey",{.key={0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10}}, "Application Key 128 bit",VISIBLE  },
     {PAR_EUI64,"Dev0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev0Eui 64",VISIBLE },
     {PAR_EUI64,"Dev1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x19,0x00,0x70}}, "Dev1Eui 64",VISIBLE  },
@@ -65,8 +62,6 @@ _par_t _pars[]={
 char t[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 extern uint8_t b[128];
 extern uint8_t mode;
-uint8_t mui[16];
-uint8_t c8[16];
 uint8_t show_hidden=0;
 
 char c_buf[BUF_LEN], val_buf[BUF_LEN], par_buf[32];
@@ -78,7 +73,13 @@ char ex[] = {"\r\nExit\r\n"};
 char commands[] = {'S', 'L', 'D'};
 char ver[]={"=== S2-LP shell v 1.1.5 ===\r\n"};
 uint8_t d[5];
-uint32_t EEPROM_types;
+
+static void _print_par(_par_t* par);
+static void print_par(char* p);
+static void print_pars(void);
+static void empty_RXbuffer(void);
+static uint8_t parcmp(char* par,char *c, uint8_t shrt);
+static uint8_t proceed(void);
 
 void send_chars(char* x) {
     uint8_t i=0;
@@ -86,11 +87,11 @@ void send_chars(char* x) {
     while (!EUSART1_is_tx_done());
 }
 
-void empty_RXbuffer() {
+static void empty_RXbuffer() {
     while (EUSART1_is_rx_ready()) EUSART1_Read();
 }
 
-uint8_t parcmp(char* par,char *c, uint8_t shrt)
+static uint8_t parcmp(char* par,char *c, uint8_t shrt)
 {
     char s;
     uint8_t j=0;
@@ -216,118 +217,8 @@ uint8_t stringToInt32(char* str, int32_t* val) //it is a function made to conver
     return 0;
 }
 
-void Sync_EEPROM(void)
-{
-    _par_t* __pars=_pars;
-    int i=1;
-    if(DATAEE_ReadByte(0))
-    {
-        while(__pars->type)
-        {
-            if(__pars->type==PAR_UI8)
-            {
-                __pars->u.ui8par=DATAEE_ReadByte(i);
-                i++;
-            }
-            else if(__pars->type==PAR_UI32 || __pars->type==PAR_I32 )
-            {
-                for(uint8_t j=0;j<4;j++) ((uint8_t*)(&(__pars->u.ui32par)))[j]=DATAEE_ReadByte(i+3-j);
-                i+=4;
-            }
-            else if(__pars->type==PAR_KEY128)
-            {
-                for(uint8_t j=0;j<16;j++) __pars->u.key[j]=DATAEE_ReadByte(i+j);
-                i+=16;
-            }
-            __pars++;
-        }
-        get_uid(&uid);
-    }
-    else
-    {
-        while(__pars->type)
-        {
-            if(__pars->type==PAR_UI8)
-            {
-                DATAEE_WriteByte(i,__pars->u.ui8par);
-                i++;
-            }
-            else if(__pars->type==PAR_UI32 || __pars->type==PAR_I32 )
-            {
-                for(int j=0;j<4;j++) DATAEE_WriteByte(i+3-j,((uint8_t*)(&(__pars->u.ui32par)))[j]);
-                i+=4;
-            }
-            else if(__pars->type==PAR_KEY128)
-            {
-                for(uint8_t j=0;j<16;j++)
-                {
-//                    send_chars(ui8tox(__pars->u.key[j],b));
-                    DATAEE_WriteByte(i+j,__pars->u.key[j]);
-                }
-//                send_chars("\r\n");
-                i+=16;
-            }
-            __pars++;
-        }
-        set_s("UID",&uid);
-        set_uid(uid);
-        DATAEE_WriteByte(0x0000, 1);
-    }
-    make_deveui();
-    EEPROM_types=get_EEPROM_types();
-    if(EEPROM_types==0xFFFFFFFF)
-    {
-        EEPROM_types=0;
-        put_EEPROM_types(EEPROM_types);
-    }
-}
 
-uint32_t get_EEPROM_types()
-{
-    uint8_t t[4];
-    uint16_t dev_start=EUI_EEPROM_START-4;
-    for(uint8_t j=0;j<4;j++) t[j]=DATAEE_ReadByte(dev_start+j);
-    return *((uint32_t*)t);
-}
-
-void put_EEPROM_types(uint32_t t)
-{
-    uint16_t dev_start=EUI_EEPROM_START-4;
-    for(uint8_t j=0;j<4;j++) DATAEE_WriteByte(dev_start+j,((uint8_t*)(&t))[j]);
-}
-
-uint8_t get_EEPROM_type(uint8_t n)
-{
-    return (uint8_t)((EEPROM_types>>n)&0x00000001);
-}
-
-void set_EEPROM_type(uint8_t n)
-{
-    EEPROM_types|=(0x00000001)<<n;
-    put_EEPROM_types(EEPROM_types);
-}
-
-void clear_EEPROM_type(uint8_t n)
-{
-    EEPROM_types&=~((0x00000001)<<n);
-    put_EEPROM_types(EEPROM_types);
-}
-
-void erase_EEPROM_Data(void)
-{
-    uint16_t dev_start=EUI_EEPROM_START-sizeof(EEPROM_types)-3;
-    uint16_t size=MAX_EEPROM_RECORDS*sizeof(EEPROM_Data_t)+sizeof(EEPROM_types)+3;
-    for(uint16_t j=0;j<size;j++) DATAEE_WriteByte(dev_start+j,0xFF);
-}
-
-void erase_ALL_EEPROM(void)
-{
-    for(uint16_t j=0;j<0x3FF;j++) DATAEE_WriteByte(j,0xFF);
-}
-
-
-
-void _print_par(_par_t* par)
+static void _print_par(_par_t* par)
 {
     if(par->visible==HIDDEN && !show_hidden) return;
     if(par->type==PAR_UI32)
@@ -388,7 +279,7 @@ void _print_par(_par_t* par)
     while (!EUSART1_is_tx_done());
 }
 
-void print_par(char* p)
+static void print_par(char* p)
 {
     _par_t* __pars=_pars;
     while(__pars->type)
@@ -402,7 +293,7 @@ void print_par(char* p)
     }
 }
 
-void print_pars()
+static void print_pars()
 {
     _par_t* __pars=_pars;
     while(__pars->type)
@@ -495,138 +386,6 @@ uint8_t set_par(char* par, char* val_buf)
     return 1;
 }
 
-void clear_uid(void)
-{
-    NVMCON1bits.REG = 1;
-    TBLPTRU=0x20;
-    TBLPTRH=0x00;
-    TBLPTRL=0x00;
-    NVMCON1bits.WREN = 1;	
-    NVMCON1bits.FREE = 1;
-    INTERRUPT_GlobalInterruptDisable();
-    NVMCON2 = 0x55;
-    NVMCON2 = 0xAA;
-    NVMCON1bits.WR = 1; // Start program
-    INTERRUPT_GlobalInterruptEnable();
-    NVMCON1bits.WREN = 0; // Disable writes to memory
-}
-
-uint32_t read_uid(void)
-{
-    uint32_t res;
-    NVMCON1bits.REG=1;
-    TBLPTRU=0x20;
-    TBLPTRH=0x00;
-    TBLPTRL=0x00;
-    
-    for(uint8_t j=0;j<16;j++)
-    {
-        asm("TBLRDPOSTINC");
-        c8[j]=TABLAT;
-    }
-/*    send_chars("c=");
-    for(uint8_t j=0;j<16;j++)
-    {
-        send_chars(" ");
-        send_chars(ui8tox(c8[j],b));
-    }
-    send_chars("\r\n");*/
-    for(uint8_t j=0;j<4;j++) ((uint8_t*)(&res))[j]=c8[j];
-    return res;
-}
-
-
-void write_uid(void)
-{
-    NVMCON1bits.REG = 1;
-    TBLPTRU=0x20;
-    TBLPTRH=0x00;
-    TBLPTRL=0x00;
-    for(uint8_t j=0;j<16;j++)
-    {
-        TABLAT=c8[j];
-        asm("TBLWTPOSTINC");
-    }
-    NVMCON1bits.REG = 1;
-    NVMCON1bits.WREN = 1;	
-    NVMCON1bits.FREE = 0;
-    INTERRUPT_GlobalInterruptDisable();
-    NVMCON2 = 0x55;
-    NVMCON2 = 0xAA;
-    NVMCON1bits.WR = 1; // Start program
-    INTERRUPT_GlobalInterruptEnable();
-    NVMCON1bits.WREN = 0; // Disable writes to memory
-}
-
-void set_uid(uint32_t uid)
-{
-    read_uid();
-    clear_uid();
-    for(uint8_t j=0;j<4;j++) c8[j]=((uint8_t*)(&uid))[j];
-    write_uid();
-}
-
-void get_uid(uint32_t* uid)
-{
-    read_uid();
-    for(uint8_t j=0;j<4;j++) ((uint8_t*)uid)[j]=c8[j];
-}
-
-void get_mui(uint8_t* mui)
-{
-    
-    NVMCON1bits.REG=1;
-    TBLPTRU=0x3F;
-    TBLPTRH=0x00;
-    for(int8_t n=0;n<16;n++)
-    {
-        TBLPTRL=n;
-        mui[n]=0;
-        INTERRUPT_GlobalInterruptDisable();
-        asm("TBLRD");
-        mui[n]=TABLAT;
-        INTERRUPT_GlobalInterruptEnable();
-    }
-}
-
-uint32_t get_did(void)
-{
-    uint32_t did0=0;
-    uint8_t r;
-    NVMCON1bits.REG=1;
-    TBLPTRU=0x3F;
-    TBLPTRH=0xFF;
-    for(uint8_t i=0;i<4;i++)
-    {
-        TBLPTRL=0xFC + i;
-        INTERRUPT_GlobalInterruptDisable();
-        asm("TBLRD");
-        r=TABLAT;
-        did0|=((uint32_t)r)<<(8*i);
-        INTERRUPT_GlobalInterruptEnable();
-    }
-    return did0;
-}
-
-void make_deveui(void)
-{
-    get_mui(mui);
-    GenericEui_t deveui,joineui;
-    for(uint8_t j=0;j<8;j++)
-    {
-        ui8tox(mui[j+2],b);
-        val_buf[2*j]=b[2];
-        val_buf[2*j+1]=b[3];
-    }
-    val_buf[16]=0;
-    set_par("DEV0EUI",val_buf);
-    set_s("DEV0EUI",&deveui);
-    printVar("DeviceEui=",PAR_EUI64,&deveui,true,true);
-    set_par("JOIN0EUI",val_buf);
-    set_s("JOIN0EUI",&joineui);
-    printVar("JoinEui=",PAR_EUI64,&joineui,true,true);
-}
-
 void printVar(char* text, par_type_t type, void* var, bool hex, bool endline)
 {
     uint8_t j0=8;
@@ -666,7 +425,7 @@ uint8_t set_s(char* p,void* s)
             if(__pars->type==PAR_UI32) *((uint32_t*)s)=__pars->u.ui32par;
             if(__pars->type==PAR_I32)  *((int32_t*)s)=__pars->u.i32par;
             if(__pars->type==PAR_UI8)  *((uint8_t*)s)=__pars->u.ui8par;
-            if(__pars->type==PAR_EUI64) for(uint8_t j=0;j<8;j++) ((GenericEui_t*)s)->buffer[j]=__pars->u.eui[j];
+            if(__pars->type==PAR_EUI64) for(uint8_t j=0;j<8;j++) ((uint8_t*)s)[j]=__pars->u.eui[j];
             if(__pars->type==PAR_KEY128) for(uint8_t j=0;j<16;j++) ((uint8_t*)s)[j]=__pars->u.key[j];
             return 0;
         };
@@ -764,7 +523,7 @@ char* ui32tox(uint32_t i, char* b)
 }
 
 
-uint8_t proceed() {
+static uint8_t proceed() {
     uint8_t i = 0,val, cmd,j,s;
     char* par=par_buf;
     //    printf("proceed %s\r\n",c_buf);

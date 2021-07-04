@@ -35,12 +35,7 @@ extern "C" {
 
 
 /****************************** INCLUDES **************************************/
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <string.h>
-#include <xc.h>
+#include "lorawan_types.h"
 
 /****************************** DEFINES ***************************************/
 
@@ -59,176 +54,6 @@ extern "C" {
 
 
 /***************************** TYPEDEFS ***************************************/
-typedef enum
-{
-    OK                                       = 0,
-    NETWORK_NOT_JOINED                          ,
-    MAC_STATE_NOT_READY_FOR_TRANSMISSION        ,
-    INVALID_PARAMETER                           ,
-    KEYS_NOT_INITIALIZED                        ,
-    SILENT_IMMEDIATELY_ACTIVE                   ,
-    FRAME_COUNTER_ERROR_REJOIN_NEEDED           ,
-    INVALID_BUFFER_LENGTH                       ,
-    MAC_PAUSED                                  ,
-    NO_CHANNELS_FOUND                           ,
-    INVALID_CLASS                               ,
-    MCAST_PARAM_ERROR                           ,
-    MCAST_MSG_ERROR                             ,
-    DEVICE_DEVNONCE_ERROR                       ,
-} LorawanError_t;                          
-
-typedef enum
-{
-    MAC_NOT_OK = 0,     //LoRaWAN operation failed
-    MAC_OK,             //LoRaWAN operation successful
-    RADIO_NOT_OK,       //Radio operation failed
-    RADIO_OK,           //Radio operation successful
-    INVALID_BUFFER_LEN, //during retransmission, we have changed SF and the buffer is too large
-    MCAST_RE_KEYING_NEEDED
-} OpStatus_t;
-
-typedef enum
-{
-    OTAA = 0,     //LoRaWAN Over The Air Activation - OTAA
-    ABP           //LoRaWAN Activation By Personalization - ABP
-} ActivationType_t;
-
-typedef enum
-{
-    UNCNF = 0, //LoRaWAN Unconfirmed Transmission
-    CNF        //LoRaWAN Confirmed Transmission
-} TransmissionType_t;
-
-typedef enum
-{   
-    ISM_EU868,
-    ISM_EU433,                         
-    ISM_RU864
-} IsmBand_t;
-
-typedef enum
-{
-    CLASS_A = 0,
-    CLASS_B,
-    CLASS_C,
-} LoRaClass_t;
-
-typedef union
-{
-    uint32_t value;
-    struct
-    {
-        unsigned macState :4;                        //determines the state of transmission (rx window open, between tx and rx, etc)
-        unsigned networkJoined :1;                   //if set, the network is joined
-        unsigned automaticReply :1;                  //if set, ACK and uplink packets sent due to  FPending will be sent immediately
-        unsigned adr :1;                             //if set, adaptive data rate is requested by server or application
-        unsigned silentImmediately :1;               //if set, the Mac command duty cycle request was received
-        unsigned macPause :1;                        //if set, the mac Pause function was called. LoRa modulation is not possible
-        unsigned rxDone :1;                          //if set, data is ready for reception
-        unsigned linkCheck :1;                       //if set, linkCheck mechanism is enabled
-        unsigned channelsModified :1;                //if set, new channels are added via CFList or NewChannelRequest command or enabled/disabled via Link Adr command
-        unsigned txPowerModified :1;                 //if set, the txPower was modified via Link Adr command
-        unsigned nbRepModified :1;                   //if set, the number of repetitions for unconfirmed frames has been modified
-        unsigned prescalerModified :1;               //if set, the prescaler has changed via duty cycle request
-        unsigned secondReceiveWindowModified :1;     //if set, the second receive window parameters have changed
-        unsigned rxTimingSetup :1;                   //if set, the delay between the end of the TX uplink and the opening of the first reception slot has changed
-        unsigned rejoinNeeded :1;                    //if set, the device must be rejoined as a frame counter issue happened
-        unsigned mcastEnable :1;                     //if set, the device is in multicast mode and can receive multicast messages
-    };
-} LorawanStatus_t;
-
-typedef union
-{
-    uint16_t value;
-    struct
-    {
-        unsigned ackRequiredFromNextDownlinkMessage:1;  //if set, the next downlink message should have the ACK bit set because an ACK is needed for the end device
-        unsigned ackRequiredFromNextUplinkMessage:1;    //if set, the next uplink message should have the ACK bit set because an ACK is needed for the server
-        unsigned joining: 1;
-        unsigned fPending:1;
-        unsigned adrAckRequest:1;
-        unsigned synchronization:1;                     //if set, there is no need to send immediately a packet because the application sent one from the callback
-    };
-} LorawanMacStatus_t;
-
-typedef union
-{
-    uint32_t value;
-    uint8_t buffer[4];
-} DeviceAddress_t;
-
-//activation parameters
-typedef union
-{
-    uint32_t value;
-    struct
-    {
-        uint16_t valueLow;
-        uint16_t valueHigh;
-    } members;
-} FCnt_t;
-
-typedef union
-{
-    uint8_t value;
-    struct
-    {
-        uint8_t rx2DataRate     : 4;
-        uint8_t rx1DROffset     : 3;
-        uint8_t rfu             : 1;
-    }bits;
-} DlSettings_t;
-
-//union used for instantiation of DeviceEui and Application Eui
-typedef union
-{
-    uint8_t buffer[8];
-    struct
-    {
-        uint32_t genericEuiL;
-        uint32_t genericEuiH;
-    }members;
-} GenericEui_t;
-
-typedef struct
-{
-    GenericEui_t Eui;
-    uint16_t DevNonce;
-} EEPROM_Data_t;
-
-typedef union
-{
-    uint8_t value;
-    struct
-    {
-        uint8_t joining : 1;
-        uint8_t joined  : 1;
-        uint8_t rfu     : 6;
-    } states;
-} DeviceStatus_t;
-
-typedef struct
-{
-    GenericEui_t Eui;
-    uint16_t DevNonce;
-    uint8_t js;
-    uint8_t NwkSKey[16];
-    uint8_t AppSKey[16];
-    DeviceAddress_t DevAddr;
-    DlSettings_t DlSettings;
-    uint8_t rxDelay;
-//    uint8_t cfList[16];
-    FCnt_t fCntUp;
-    FCnt_t fCntDown;
-    DeviceStatus_t status;
-    uint8_t sendJoinAccept1TimerId;
-    uint8_t sendWindow1TimerId;
-    LorawanMacStatus_t lorawanMacStatus;
-    LorawanStatus_t macStatus;
-    uint8_t macBuffer[32];
-    uint8_t bufferIndex;
-} Profile_t;
-
 /*************************** FUNCTIONS PROTOTYPE ******************************/
 
 typedef struct
@@ -1676,7 +1501,7 @@ void put_JoinNonce(uint8_t* joinnonce);
 void get_JoinNonce(uint8_t* joinnonce);
 void get_NetID(uint8_t* netid);
 void calculate_NwkID(void);
-void get_nextDevAddr(DeviceAddress_t* devaddr);
+uint32_t get_nextDevAddr(DeviceAddress_t* devaddr);
 void getinc_JoinNonce(uint8_t* joinnonce);
 
 

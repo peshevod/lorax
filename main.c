@@ -57,6 +57,7 @@
 #include <math.h>
 #include "radio_registers_SX1276.h"
 #include <xc.h>
+#include "eeprom.h"
 /*
                          Main application
  */
@@ -103,6 +104,7 @@ uint8_t ncol, ncoh, ncou, nco;
 volatile uint8_t insleep;
 uint8_t spread_factor;
 GenericEui_t JoinEui, DevEui;
+uint32_t DenyTransmit, DenyReceive;
 
 extern char b[128];
 extern uint8_t trace;
@@ -114,7 +116,7 @@ extern uint8_t number_of_devices;
 extern uint32_t NetID;
 extern uint8_t DevAddr[4];
 extern Profile_t devices[MAX_EEPROM_RECORDS];
-
+extern LoRa_t loRa;
 
 char* errors[] = {
     "OK",
@@ -479,42 +481,17 @@ void main(void)
             set_s("APPKEY",appkey);
             LORAWAN_SetApplicationKey(appkey);
             LORAWAN_SetActivationType(OTAA);
-//            LORAWAN_SetNetworkSessionKey(nwkSKey);
-//            LORAWAN_SetApplicationSessionKey(appSKey);
-//            LORAWAN_SetDeviceAddress(devAddr);
-//            LORAWAN_Join(ABP);
             // Application main loop
+            DenyTransmit=0;
+            DenyReceive=0;
             while (1)
             {   
+                LORAWAN_Mainloop();        
                 // Stack management
-                LORAWAN_Mainloop();
-                
-                uint8_t state,rec_ready=1;
-                for(uint8_t j=0;j<number_of_devices;j++)
-                {
-                    state=devices[j].macStatus.macState;
-                    if(state != IDLE && state != BEFORE_TX1 && state != BEFORE_ACK )
-                    {
-                        rec_ready=0;
-                        break;
-                    }
-                }
-                if(rec_ready && (LORAWAN_GetState()!=RXCONT && LORAWAN_GetState()!=TRANSMISSION_OCCURRING))
+                if(loRa.macStatus.macState==IDLE)
                 {
                     LORAWAN_Receive();
                 }
-//                else
-//                {
-//                   printVar("State=",PAR_UI8,&state,false,true); 
-//                }
-    
-//                if(LoRa_CanSleep())
-//                {
-//                    send_chars("to sleep\r\n");
-//                    LoRaSleep();
-//                    insleep=1;
-//                    SLEEP();
-//                }
             }
             break;
     }

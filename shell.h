@@ -66,27 +66,9 @@ char* ui8toa(uint8_t i, char* b);
 char* ui8tox(uint8_t i, char* b);
 char* ui32tox(uint32_t i, char* b);
 char* i32tox(int32_t i, char* b);
-void _print_par(_par_t* par);
-void print_par(char* p);
-void print_pars();
 uint8_t set_s(char* p,void* s);
-void get_uid(uint32_t* uid);
-void set_uid(uint32_t uid);
-void Sync_EEPROM(void);
-void get_mui(uint8_t* mui);
-uint32_t get_did(void);
-void make_deveui(void);
-void clear_uid(void);
-uint32_t read_uid(void);
-void write_uid(void);
 void printVar(char* text, par_type_t type, void* var, bool hex, bool endline);
-uint32_t get_EEPROM_types();
-void put_EEPROM_types(uint32_t t);
-uint8_t get_EEPROM_type(uint8_t n);
-void set_EEPROM_type(uint8_t n);
-void clear_EEPROM_type(uint8_t n);
-void erase_EEPROM_Data(void);
-
+uint8_t set_par(char* par, char* val_buf);
 
 
 #ifdef	__cplusplus

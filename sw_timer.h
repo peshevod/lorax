@@ -91,6 +91,8 @@ uint32_t SwTimersInterrupt(void);
 void TMR_OverrideRemaining(uint32_t ticksRemaining);
 uint32_t TMR_GetDeltaTime(void);
 uint16_t TMR_SwapTimer(uint16_t timerVal);
+void SwTimerStartNew(uint8_t newtimerId,uint8_t oldtimerId, uint32_t delta);
+
 
 #ifdef	__cplusplus
 }

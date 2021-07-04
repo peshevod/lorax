@@ -38,6 +38,7 @@
 #include "sw_timer.h"
 #include "lorawan_ru.h"
 #include "shell.h"
+#include "eeprom.h"
 
 
 /****************************** VARIABLES *************************************/
@@ -1061,6 +1062,7 @@ static void CreateAllSoftwareTimers (void)
         devices[j].sendWindow1TimerId=SwTimerCreate();
     }
     tt0=SwTimerCreate();
+    loRa.virtualTimer=SwTimerCreate();
 }
 
 static void SetCallbackSoftwareTimers (void)
@@ -1100,6 +1102,7 @@ static void StopAllSoftwareTimers (void)
         SwTimerStop(devices[j].sendWindow1TimerId);
     }
 	SwTimerStop(tt0);
+    SwTimerStop(loRa.virtualTimer);
 }
 
 static void InitDefault868Channels (void)

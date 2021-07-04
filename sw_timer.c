@@ -63,6 +63,9 @@ volatile static uint32_t ticksAccounted;
 
 // This function needs to be called with interrupts stopped, shortly after
 // GetDeltaTime (i.e. when ticksPassed ~= 0)
+//
+// update timer with new value so hw interrupt occur after ticksRemaining
+// if ticksToScheduledInterrupt is greater, then ticksRemaining
 void TMR_OverrideRemaining(uint32_t ticksRemaining)
 {
     uint16_t tmrVal;
@@ -232,6 +235,25 @@ void SwTimerStart(uint8_t timerId)
     INTERRUPT_GlobalInterruptEnable();
 }
 
+void SwTimerStartNew(uint8_t newtimerId,uint8_t oldtimerId, uint32_t delta)
+{
+    uint32_t ticksRemaining;
+    // Need to synchronize all timers
+    INTERRUPT_GlobalInterruptDisable();
+    ticksRemaining = SwTimersInterrupt();
+    swTimers[oldtimerId].running = 0;
+    swTimers[newtimerId].ticksRemaining=swTimers[oldtimerId].ticksRemaining-delta;
+    printVar("oldTimer ticksRemaining=",PAR_UI32,&swTimers[oldtimerId].ticksRemaining,false,true);
+    printVar("newTimer ticksRemaining=",PAR_UI32,&swTimers[newtimerId].ticksRemaining,false,true);
+    if (swTimers[newtimerId].ticksRemaining < ticksRemaining)
+    {
+        ticksRemaining = swTimers[newtimerId].ticksRemaining;
+    }
+    TMR_OverrideRemaining(ticksRemaining);
+    swTimers[newtimerId].running = 1;
+    INTERRUPT_GlobalInterruptEnable();
+}
+
 void SwTimerStop(uint8_t timerId)
 {
     INTERRUPT_GlobalInterruptDisable();
@@ -286,6 +308,9 @@ void SwTimersExecute(void)
 }
 
 // Function called from ISR AND mainline code
+// proceed corrections of ticksRemainig of all active timers after last call of this function
+// and return minimun of ticksRemainig
+//
 uint32_t SwTimersInterrupt(void)
 {
     uint8_t i;
