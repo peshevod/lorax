@@ -60,7 +60,7 @@ void DIO2_ISR_Lora_Init(void)
 
 void DIO3_ISR_Lora_Init(void)
 {
-    IOCCF7_SetInterruptHandler(DIO5_ISR_Lora);
+    IOCCF7_SetInterruptHandler(DIO3_ISR_Lora);
 }
 
 void DIO4_ISR_Lora_Init(void)

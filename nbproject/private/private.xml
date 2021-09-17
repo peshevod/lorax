@@ -4,28 +4,27 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorax_radio.h</file>
+            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/eeprom.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/uart1.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/nco1.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/sw_timer.h</file>
+            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_aes_cmac.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/radio_driver_hal.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_private.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_lora_config.h</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/memory.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/radio_driver_hal.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/interrupt_manager_lora_addons.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/nco1.h</file>
+            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/eeprom.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/interrupt_manager_lora_addons.c</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/mcc.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_defs.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_ru.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/main.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/tmr_lora_addons.h</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/radio_registers_SX1276.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_ru.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/tmr_lora_addons.c</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/pin_manager.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/shell.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/pin_manager.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/interrupt_manager.c</file>
@@ -34,12 +33,10 @@
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/AESdef.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/spi1.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/AES.h</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/device_config.c</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_aes.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_init.c</file>
-            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/tmr1.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_aes.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_init.h</file>
+            <file>file:/D:/Microchip/MPLABXProjects/lorax.X/lorawan_types.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/radio_driver_SX1276.h</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/sw_timer.c</file>
             <file>file:/D:/Microchip/MPLABXProjects/lorax.X/mcc_generated_files/spi1.h</file>

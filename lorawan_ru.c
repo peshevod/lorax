@@ -454,8 +454,10 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
             // the join request should never exceed 0.1%
             if (loRa.lorawanMacStatus.joining == 1)
             {           
-                SwTimerSetTimeout(loRa.joinAccept1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay1 + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
-                SwTimerSetTimeout(loRa.joinAccept2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay2 + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
+                int32_t rx1_offset;
+                set_s("RX1_OFFSET",&rx1_offset);
+                SwTimerSetTimeout(loRa.joinAccept1TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay1 + rx1_offset + rxWindowOffset[loRa.receiveWindow1Parameters.dataRate]));
+                SwTimerSetTimeout(loRa.joinAccept2TimerId, MS_TO_TICKS_SHORT(loRa.protocolParameters.joinAcceptDelay2 + rx1_offset + rxWindowOffset[loRa.receiveWindow2Parameters.dataRate]));
                 SwTimerStart(loRa.joinAccept1TimerId);
                 SwTimerStart(loRa.joinAccept2TimerId);
 

@@ -36,6 +36,7 @@
 #include "sw_timer.h"
 #include "interrupt_manager_lora_addons.h"
 #include <math.h>
+#include <stdint.h>
 #include "lorawan_ru.h"
 #include "shell.h"
 #include "eeprom.h"
@@ -215,7 +216,7 @@ LorawanError_t LORAWAN_Join(ActivationType_t activationTypeNew)
 }
 
 LorawanError_t LORAWAN_Send (TransmissionType_t confirmed, uint8_t port,  void *buffer, uint8_t bufferLength)
- {
+{
     LorawanError_t result;
 
     if (loRa.macStatus.macPause == ENABLED)
@@ -898,7 +899,7 @@ void LORAWAN_ReceiveWindow1Callback (uint8_t param)
         SwTimerSetTimeout(tt0,MS_TO_TICKS(tt0_value));
         SwTimerStart(tt0);
         
-        RADIO_ReceiveStart(rxWindowSize[loRa.receiveWindow1Parameters.dataRate]);
+        RADIO_ReceiveStart(3*rxWindowSize[loRa.receiveWindow1Parameters.dataRate]);
 //        RADIO_SetWatchdogTimeout(5000);
 //        RADIO_ReceiveStart(0);
     }
@@ -1326,7 +1327,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                    temp = 0;
                }               
             }
-
+            printVar("Received data=",PAR_KEY128,buffer,true,true);
             //verify MIC
             computedMic = ComputeMic (loRa.activationParameters.applicationKey, buffer, bufferLength - sizeof(extractedMic));
             extractedMic = ExtractMic (buffer, bufferLength);

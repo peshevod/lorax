@@ -52,7 +52,7 @@ _par_t _pars[]={
     {PAR_EUI64,"Dev6Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev6Eui 64",VISIBLE  },
     {PAR_EUI64,"Dev7Eui",{.eui={0,0,0,0,0,0,0,0}}, "Dev7Eui 64",VISIBLE  },
     {PAR_EUI64,"Join0Eui",{.eui={0,0,0,0,0,0,0,0}}, "Join0Eui 64",VISIBLE  },
-    {PAR_EUI64,"Join1Eui",{.eui={0x20,0x37,0x11,0x32,0x10,0x19,0x00,0x70}}, "Join1Eui 64",VISIBLE  },
+    {PAR_EUI64,"Join1Eui",{.eui={0,0,0x98,0xCD,0xAC,0xE9,0x2D,0x5C}}, "Join1Eui 64",VISIBLE  },
     {PAR_EUI64,"Join2Eui",{.eui={0x20,0x37,0x11,0x32,0x11,0x15,0x00,0x80}}, "Join2Eui 64",VISIBLE  },
     {PAR_EUI64,"Join3Eui",{.eui={0x20,0x37,0x11,0x32,0x13,0x13,0x00,0x10}}, "Join3Eui 64",VISIBLE  },
     {PAR_UI8,"Erase_EEPROM",{0},"If set erase EEPROM",HIDDEN},
