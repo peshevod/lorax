@@ -9,7 +9,6 @@
                      projectFiles="true">
         <itemPath>mcc_generated_files/device_config.h</itemPath>
         <itemPath>mcc_generated_files/uart1.h</itemPath>
-        <itemPath>mcc_generated_files/spi1.h</itemPath>
         <itemPath>mcc_generated_files/interrupt_manager.h</itemPath>
         <itemPath>mcc_generated_files/mcc.h</itemPath>
         <itemPath>mcc_generated_files/pin_manager.h</itemPath>
@@ -19,6 +18,10 @@
         <itemPath>mcc_generated_files/tmr3.h</itemPath>
         <itemPath>mcc_generated_files/nco1.h</itemPath>
         <itemPath>mcc_generated_files/clkref.h</itemPath>
+        <itemPath>mcc_generated_files/spi1.h</itemPath>
+        <itemPath>mcc_generated_files/hlvd.h</itemPath>
+        <itemPath>mcc_generated_files/adcc.h</itemPath>
+        <itemPath>mcc_generated_files/fvr.h</itemPath>
       </logicalFolder>
       <itemPath>lorawan_defs.h</itemPath>
       <itemPath>mcc_lora_config.h</itemPath>
@@ -40,6 +43,7 @@
       <itemPath>AESdef.h</itemPath>
       <itemPath>eeprom.h</itemPath>
       <itemPath>lorawan_types.h</itemPath>
+      <itemPath>measurements.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -53,7 +57,6 @@
                      projectFiles="true">
         <itemPath>mcc_generated_files/device_config.c</itemPath>
         <itemPath>mcc_generated_files/uart1.c</itemPath>
-        <itemPath>mcc_generated_files/spi1.c</itemPath>
         <itemPath>mcc_generated_files/interrupt_manager.c</itemPath>
         <itemPath>mcc_generated_files/mcc.c</itemPath>
         <itemPath>mcc_generated_files/pin_manager.c</itemPath>
@@ -63,6 +66,10 @@
         <itemPath>mcc_generated_files/tmr3.c</itemPath>
         <itemPath>mcc_generated_files/nco1.c</itemPath>
         <itemPath>mcc_generated_files/clkref.c</itemPath>
+        <itemPath>mcc_generated_files/spi1.c</itemPath>
+        <itemPath>mcc_generated_files/hlvd.c</itemPath>
+        <itemPath>mcc_generated_files/adcc.c</itemPath>
+        <itemPath>mcc_generated_files/fvr.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>sw_timer.c</itemPath>
@@ -78,6 +85,7 @@
       <itemPath>lorawan_aes_cmac.c</itemPath>
       <itemPath>AES.c</itemPath>
       <itemPath>eeprom.c</itemPath>
+      <itemPath>measurements.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

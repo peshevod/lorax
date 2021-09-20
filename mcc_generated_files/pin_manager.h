@@ -65,57 +65,45 @@
 #define PULL_UP_ENABLED      1
 #define PULL_UP_DISABLED     0
 
-// get/set SENSOR1 aliases
-#define SENSOR1_TRIS                 TRISAbits.TRISA2
-#define SENSOR1_LAT                  LATAbits.LATA2
-#define SENSOR1_PORT                 PORTAbits.RA2
-#define SENSOR1_WPU                  WPUAbits.WPUA2
-#define SENSOR1_OD                   ODCONAbits.ODCA2
-#define SENSOR1_ANS                  ANSELAbits.ANSELA2
-#define SENSOR1_SetHigh()            do { LATAbits.LATA2 = 1; } while(0)
-#define SENSOR1_SetLow()             do { LATAbits.LATA2 = 0; } while(0)
-#define SENSOR1_Toggle()             do { LATAbits.LATA2 = ~LATAbits.LATA2; } while(0)
-#define SENSOR1_GetValue()           PORTAbits.RA2
-#define SENSOR1_SetDigitalInput()    do { TRISAbits.TRISA2 = 1; } while(0)
-#define SENSOR1_SetDigitalOutput()   do { TRISAbits.TRISA2 = 0; } while(0)
-#define SENSOR1_SetPullup()          do { WPUAbits.WPUA2 = 1; } while(0)
-#define SENSOR1_ResetPullup()        do { WPUAbits.WPUA2 = 0; } while(0)
-#define SENSOR1_SetPushPull()        do { ODCONAbits.ODCA2 = 0; } while(0)
-#define SENSOR1_SetOpenDrain()       do { ODCONAbits.ODCA2 = 1; } while(0)
-#define SENSOR1_SetAnalogMode()      do { ANSELAbits.ANSELA2 = 1; } while(0)
-#define SENSOR1_SetDigitalMode()     do { ANSELAbits.ANSELA2 = 0; } while(0)
-
 // get/set SENSOR2 aliases
-#define SENSOR2_TRIS                 TRISAbits.TRISA3
-#define SENSOR2_LAT                  LATAbits.LATA3
-#define SENSOR2_PORT                 PORTAbits.RA3
-#define SENSOR2_WPU                  WPUAbits.WPUA3
-#define SENSOR2_OD                   ODCONAbits.ODCA3
-#define SENSOR2_ANS                  ANSELAbits.ANSELA3
-#define SENSOR2_SetHigh()            do { LATAbits.LATA3 = 1; } while(0)
-#define SENSOR2_SetLow()             do { LATAbits.LATA3 = 0; } while(0)
-#define SENSOR2_Toggle()             do { LATAbits.LATA3 = ~LATAbits.LATA3; } while(0)
-#define SENSOR2_GetValue()           PORTAbits.RA3
-#define SENSOR2_SetDigitalInput()    do { TRISAbits.TRISA3 = 1; } while(0)
-#define SENSOR2_SetDigitalOutput()   do { TRISAbits.TRISA3 = 0; } while(0)
-#define SENSOR2_SetPullup()          do { WPUAbits.WPUA3 = 1; } while(0)
-#define SENSOR2_ResetPullup()        do { WPUAbits.WPUA3 = 0; } while(0)
-#define SENSOR2_SetPushPull()        do { ODCONAbits.ODCA3 = 0; } while(0)
-#define SENSOR2_SetOpenDrain()       do { ODCONAbits.ODCA3 = 1; } while(0)
-#define SENSOR2_SetAnalogMode()      do { ANSELAbits.ANSELA3 = 1; } while(0)
-#define SENSOR2_SetDigitalMode()     do { ANSELAbits.ANSELA3 = 0; } while(0)
+#define SENSOR2_TRIS                 TRISAbits.TRISA2
+#define SENSOR2_LAT                  LATAbits.LATA2
+#define SENSOR2_PORT                 PORTAbits.RA2
+#define SENSOR2_WPU                  WPUAbits.WPUA2
+#define SENSOR2_OD                   ODCONAbits.ODCA2
+#define SENSOR2_ANS                  ANSELAbits.ANSELA2
+#define SENSOR2_SetHigh()            do { LATAbits.LATA2 = 1; } while(0)
+#define SENSOR2_SetLow()             do { LATAbits.LATA2 = 0; } while(0)
+#define SENSOR2_Toggle()             do { LATAbits.LATA2 = ~LATAbits.LATA2; } while(0)
+#define SENSOR2_GetValue()           PORTAbits.RA2
+#define SENSOR2_SetDigitalInput()    do { TRISAbits.TRISA2 = 1; } while(0)
+#define SENSOR2_SetDigitalOutput()   do { TRISAbits.TRISA2 = 0; } while(0)
+#define SENSOR2_SetPullup()          do { WPUAbits.WPUA2 = 1; } while(0)
+#define SENSOR2_ResetPullup()        do { WPUAbits.WPUA2 = 0; } while(0)
+#define SENSOR2_SetPushPull()        do { ODCONAbits.ODCA2 = 0; } while(0)
+#define SENSOR2_SetOpenDrain()       do { ODCONAbits.ODCA2 = 1; } while(0)
+#define SENSOR2_SetAnalogMode()      do { ANSELAbits.ANSELA2 = 1; } while(0)
+#define SENSOR2_SetDigitalMode()     do { ANSELAbits.ANSELA2 = 0; } while(0)
 
-// get/set RB0 procedures
-#define RB0_SetHigh()            do { LATBbits.LATB0 = 1; } while(0)
-#define RB0_SetLow()             do { LATBbits.LATB0 = 0; } while(0)
-#define RB0_Toggle()             do { LATBbits.LATB0 = ~LATBbits.LATB0; } while(0)
-#define RB0_GetValue()              PORTBbits.RB0
-#define RB0_SetDigitalInput()    do { TRISBbits.TRISB0 = 1; } while(0)
-#define RB0_SetDigitalOutput()   do { TRISBbits.TRISB0 = 0; } while(0)
-#define RB0_SetPullup()             do { WPUBbits.WPUB0 = 1; } while(0)
-#define RB0_ResetPullup()           do { WPUBbits.WPUB0 = 0; } while(0)
-#define RB0_SetAnalogMode()         do { ANSELBbits.ANSELB0 = 1; } while(0)
-#define RB0_SetDigitalMode()        do { ANSELBbits.ANSELB0 = 0; } while(0)
+// get/set SENSOR1 aliases
+#define SENSOR1_TRIS                 TRISAbits.TRISA3
+#define SENSOR1_LAT                  LATAbits.LATA3
+#define SENSOR1_PORT                 PORTAbits.RA3
+#define SENSOR1_WPU                  WPUAbits.WPUA3
+#define SENSOR1_OD                   ODCONAbits.ODCA3
+#define SENSOR1_ANS                  ANSELAbits.ANSELA3
+#define SENSOR1_SetHigh()            do { LATAbits.LATA3 = 1; } while(0)
+#define SENSOR1_SetLow()             do { LATAbits.LATA3 = 0; } while(0)
+#define SENSOR1_Toggle()             do { LATAbits.LATA3 = ~LATAbits.LATA3; } while(0)
+#define SENSOR1_GetValue()           PORTAbits.RA3
+#define SENSOR1_SetDigitalInput()    do { TRISAbits.TRISA3 = 1; } while(0)
+#define SENSOR1_SetDigitalOutput()   do { TRISAbits.TRISA3 = 0; } while(0)
+#define SENSOR1_SetPullup()          do { WPUAbits.WPUA3 = 1; } while(0)
+#define SENSOR1_ResetPullup()        do { WPUAbits.WPUA3 = 0; } while(0)
+#define SENSOR1_SetPushPull()        do { ODCONAbits.ODCA3 = 0; } while(0)
+#define SENSOR1_SetOpenDrain()       do { ODCONAbits.ODCA3 = 1; } while(0)
+#define SENSOR1_SetAnalogMode()      do { ANSELAbits.ANSELA3 = 1; } while(0)
+#define SENSOR1_SetDigitalMode()     do { ANSELAbits.ANSELA3 = 0; } while(0)
 
 // get/set RB1 procedures
 #define RB1_SetHigh()            do { LATBbits.LATB1 = 1; } while(0)
@@ -520,90 +508,6 @@ void IOCAF3_DefaultInterruptHandler(void);
  * @Returns
     none
  * @Description
-    Interrupt on Change Handler for the IOCBF0 pin functionality
- * @Example
-    IOCBF0_ISR();
- */
-void IOCBF0_ISR(void);
-
-/**
-  @Summary
-    Interrupt Handler Setter for IOCBF0 pin interrupt-on-change functionality
-
-  @Description
-    Allows selecting an interrupt handler for IOCBF0 at application runtime
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    InterruptHandler function pointer.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCBF0_SetInterruptHandler(MyInterruptHandler);
-
-*/
-void IOCBF0_SetInterruptHandler(void (* InterruptHandler)(void));
-
-/**
-  @Summary
-    Dynamic Interrupt Handler for IOCBF0 pin
-
-  @Description
-    This is a dynamic interrupt handler to be used together with the IOCBF0_SetInterruptHandler() method.
-    This handler is called every time the IOCBF0 ISR is executed and allows any function to be registered at runtime.
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    None.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCBF0_SetInterruptHandler(IOCBF0_InterruptHandler);
-
-*/
-extern void (*IOCBF0_InterruptHandler)(void);
-
-/**
-  @Summary
-    Default Interrupt Handler for IOCBF0 pin
-
-  @Description
-    This is a predefined interrupt handler to be used together with the IOCBF0_SetInterruptHandler() method.
-    This handler is called every time the IOCBF0 ISR is executed. 
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    None.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCBF0_SetInterruptHandler(IOCBF0_DefaultInterruptHandler);
-
-*/
-void IOCBF0_DefaultInterruptHandler(void);
-
-
-/**
- * @Param
-    none
- * @Returns
-    none
- * @Description
     Interrupt on Change Handler for the IOCBF1 pin functionality
  * @Example
     IOCBF1_ISR();
@@ -764,174 +668,6 @@ extern void (*IOCBF2_InterruptHandler)(void);
 
 */
 void IOCBF2_DefaultInterruptHandler(void);
-
-
-/**
- * @Param
-    none
- * @Returns
-    none
- * @Description
-    Interrupt on Change Handler for the IOCCF6 pin functionality
- * @Example
-    IOCCF6_ISR();
- */
-void IOCCF6_ISR(void);
-
-/**
-  @Summary
-    Interrupt Handler Setter for IOCCF6 pin interrupt-on-change functionality
-
-  @Description
-    Allows selecting an interrupt handler for IOCCF6 at application runtime
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    InterruptHandler function pointer.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCCF6_SetInterruptHandler(MyInterruptHandler);
-
-*/
-void IOCCF6_SetInterruptHandler(void (* InterruptHandler)(void));
-
-/**
-  @Summary
-    Dynamic Interrupt Handler for IOCCF6 pin
-
-  @Description
-    This is a dynamic interrupt handler to be used together with the IOCCF6_SetInterruptHandler() method.
-    This handler is called every time the IOCCF6 ISR is executed and allows any function to be registered at runtime.
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    None.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCCF6_SetInterruptHandler(IOCCF6_InterruptHandler);
-
-*/
-extern void (*IOCCF6_InterruptHandler)(void);
-
-/**
-  @Summary
-    Default Interrupt Handler for IOCCF6 pin
-
-  @Description
-    This is a predefined interrupt handler to be used together with the IOCCF6_SetInterruptHandler() method.
-    This handler is called every time the IOCCF6 ISR is executed. 
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    None.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCCF6_SetInterruptHandler(IOCCF6_DefaultInterruptHandler);
-
-*/
-void IOCCF6_DefaultInterruptHandler(void);
-
-
-/**
- * @Param
-    none
- * @Returns
-    none
- * @Description
-    Interrupt on Change Handler for the IOCCF7 pin functionality
- * @Example
-    IOCCF7_ISR();
- */
-void IOCCF7_ISR(void);
-
-/**
-  @Summary
-    Interrupt Handler Setter for IOCCF7 pin interrupt-on-change functionality
-
-  @Description
-    Allows selecting an interrupt handler for IOCCF7 at application runtime
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    InterruptHandler function pointer.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCCF7_SetInterruptHandler(MyInterruptHandler);
-
-*/
-void IOCCF7_SetInterruptHandler(void (* InterruptHandler)(void));
-
-/**
-  @Summary
-    Dynamic Interrupt Handler for IOCCF7 pin
-
-  @Description
-    This is a dynamic interrupt handler to be used together with the IOCCF7_SetInterruptHandler() method.
-    This handler is called every time the IOCCF7 ISR is executed and allows any function to be registered at runtime.
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    None.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCCF7_SetInterruptHandler(IOCCF7_InterruptHandler);
-
-*/
-extern void (*IOCCF7_InterruptHandler)(void);
-
-/**
-  @Summary
-    Default Interrupt Handler for IOCCF7 pin
-
-  @Description
-    This is a predefined interrupt handler to be used together with the IOCCF7_SetInterruptHandler() method.
-    This handler is called every time the IOCCF7 ISR is executed. 
-    
-  @Preconditions
-    Pin Manager intializer called
-
-  @Returns
-    None.
-
-  @Param
-    None.
-
-  @Example
-    PIN_MANAGER_Initialize();
-    IOCCF7_SetInterruptHandler(IOCCF7_DefaultInterruptHandler);
-
-*/
-void IOCCF7_DefaultInterruptHandler(void);
 
 
 

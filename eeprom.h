@@ -46,7 +46,10 @@ uint16_t get_DevNonce(uint8_t n);
 void put_JoinNonce(uint8_t* joinnonce);
 void get_JoinNonce(uint8_t* joinnonce);
 void getinc_JoinNonce(uint8_t* joinnonce);
-
+uint16_t get_TSLR2(void);
+uint16_t get_TSHR2(void);
+uint16_t get_FVRA2X(void);
+uint16_t get_FVRA1X(void);
 
 
 #ifdef	__cplusplus

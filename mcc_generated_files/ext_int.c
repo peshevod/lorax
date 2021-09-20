@@ -137,7 +137,6 @@ void EXT_INT_Initialize(void)
     EXT_INT2_risingEdgeSet();    
     // Set Default Interrupt Handler
     INT2_SetInterruptHandler(INT2_DefaultInterruptHandler);
-    EXT_INT2_InterruptEnable();      
 
 }
 

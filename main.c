@@ -58,6 +58,7 @@
 #include "radio_registers_SX1276.h"
 #include <xc.h>
 #include "eeprom.h"
+#include "measurements.h"
 /*
                          Main application
  */
@@ -295,13 +296,21 @@ void main(void)
 //    clear_uid();
 //    erase_EEPROM_Data();    
     Sync_EEPROM();
+    getTableValues();
     SystemTimerInit();
     TMR_ISR_Lora_Init();
     
     
     send_chars("\r\nuid=");
     send_chars(ui32tox(uid,b));
+    send_chars("\r\nBatteryLevel=");
+    uint8_t bat_level=getBatteryLevel();
+    send_chars(ui8toa(bat_level,b));
+    send_chars("\r\nTemperature=");
+    int32_t temperature=getTemperature();
+    send_chars(i32toa(temperature,b));
     send_chars("\r\n");
+    
 /*    send_chars("mui=");
     get_mui(mui);
     for(uint8_t i=0;i<16;i++)

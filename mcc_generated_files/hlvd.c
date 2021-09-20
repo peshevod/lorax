@@ -1,23 +1,23 @@
 /**
-  @Generated PIC10 / PIC12 / PIC16 / PIC18 MCUs Header File
+  HLVD Generated Driver File
 
-  @Company:
+  @Company
     Microchip Technology Inc.
 
-  @File Name:
-    mcc.h
+  @File Name
+   hlvd.c
 
-  @Summary:
-    This is the mcc.h file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary
+    This is the generated driver implementation file for the HLVD driver using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
+  @Description
+    This source file provides implementations for driver APIs for HLVD.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.81.7
         Device            :  PIC18LF27K42
-        Driver Version    :  2.00
+        Driver Version    :  2.11
     The generated drivers are tested against the following:
-        Compiler          :  XC8 2.31 and above or later
+        Compiler          :  XC8 2.31 and above
         MPLAB             :  MPLAB X 5.45
 */
 
@@ -44,70 +44,75 @@
     SOFTWARE.
 */
 
-#ifndef MCC_H
-#define	MCC_H
+/**
+  Section: Included Files
+*/
+
 #include <xc.h>
-#include "device_config.h"
-#include "pin_manager.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include <conio.h>
-#include "interrupt_manager.h"
-#include "tmr3.h"
-#include "tmr1.h"
-#include "adcc.h"
-#include "fvr.h"
-#include "nco1.h"
-#include "ext_int.h"
-#include "memory.h"
 #include "hlvd.h"
-#include "uart1.h"
-#include "spi1.h"
-#include "clkref.h"
-
-
 
 /**
- * @Param
-    none
- * @Returns
-    none
- * @Description
-    Initializes the device to the default states configured in the
- *                  MCC GUI
- * @Example
-    SYSTEM_Initialize(void);
- */
-void SYSTEM_Initialize(void);
+  Section: HLVD Module APIs
+*/
 
-/**
- * @Param
-    none
- * @Returns
-    none
- * @Description
-    Initializes the oscillator to the default states configured in the
- *                  MCC GUI
- * @Example
-    OSCILLATOR_Initialize(void);
- */
-void OSCILLATOR_Initialize(void);
-
-/**
- * @Param
-    none
- * @Returns
-    none
- * @Description
-    Initializes the PMD module to the default states configured in the
- *                  MCC GUI
- * @Example
-    PMD_Initialize(void);
- */
-void PMD_Initialize(void);
+void HLVD_Initialize(void)
+{
+    // set the HLVD_Initialize module to the options selected in the User Interface
+     // SEL 1.85; 
+    HLVDCON1 = 0x00;
+     // HLVDINTL disabled; HLVDINTH disabled; HLVDEN enabled; 
+    HLVDCON0 = 0x80;
+    
+    PIR0bits.HLVDIF = 0;
+}
 
 
-#endif	/* MCC_H */
+bool HLVD_IsBandGapVoltageStable(void)
+{    
+      
+    //return band gap voltage status
+    return(HLVDCON0bits.HLVDRDY);
+}
+
+
+void HLVD_Enable(void)
+{
+    // enable HLVD module
+    
+    HLVDCON0bits.HLVDEN = 1;
+    PIR0bits.HLVDIF = 0;
+}
+
+void HLVD_Disable(void)
+{
+    
+    // disable HLVD module
+    HLVDCON0bits.HLVDEN = 0; 
+}
+
+void HLVD_TripPointSetup(bool Negative_Trip,bool Positive_Trip,
+        HLVD_TRIP_POINTS trip_points)
+{
+   //set Negative trip
+   HLVDCON0bits.HLVDINTL = Negative_Trip;
+ //set Positive trip
+   HLVDCON0bits.HLVDINTH = Positive_Trip;
+   // Set trip points
+   HLVDCON1 = trip_points;
+}
+
+bool HLVD_OutputStatusGet(void)
+{    
+    //return HLVD voltage status
+    return(HLVDCON0bits.HLVDOUT);
+}
+
+void HLVD_Tasks( void )
+{
+    /* TODO : Add interrupt handling code */
+    PIR0bits.HLVDIF = 0;
+}
+
 /**
  End of File
 */

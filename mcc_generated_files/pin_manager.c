@@ -53,11 +53,8 @@
 
 void (*IOCAF2_InterruptHandler)(void);
 void (*IOCAF3_InterruptHandler)(void);
-void (*IOCBF0_InterruptHandler)(void);
 void (*IOCBF1_InterruptHandler)(void);
 void (*IOCBF2_InterruptHandler)(void);
-void (*IOCCF6_InterruptHandler)(void);
-void (*IOCCF7_InterruptHandler)(void);
 
 
 void PIN_MANAGER_Initialize(void)
@@ -80,8 +77,8 @@ void PIN_MANAGER_Initialize(void)
     ANSELx registers
     */
     ANSELC = 0x00;
-    ANSELB = 0xC0;
-    ANSELA = 0xF3;
+    ANSELB = 0xC1;
+    ANSELA = 0x73;
 
     /**
     WPUx registers
@@ -89,7 +86,7 @@ void PIN_MANAGER_Initialize(void)
     WPUE = 0x00;
     WPUB = 0x00;
     WPUA = 0x00;
-    WPUC = 0x01;
+    WPUC = 0x00;
 
     /**
     RxyI2C registers
@@ -138,46 +135,25 @@ void PIN_MANAGER_Initialize(void)
     //interrupt on change for group IOCAP - positive
     IOCAPbits.IOCAP3 = 1;
     //interrupt on change for group IOCBF - flag
-    IOCBFbits.IOCBF0 = 0;
-    //interrupt on change for group IOCBF - flag
     IOCBFbits.IOCBF1 = 0;
     //interrupt on change for group IOCBF - flag
     IOCBFbits.IOCBF2 = 0;
-    //interrupt on change for group IOCBN - negative
-    IOCBNbits.IOCBN0 = 1;
     //interrupt on change for group IOCBN - negative
     IOCBNbits.IOCBN1 = 0;
     //interrupt on change for group IOCBN - negative
     IOCBNbits.IOCBN2 = 0;
     //interrupt on change for group IOCBP - positive
-    IOCBPbits.IOCBP0 = 1;
-    //interrupt on change for group IOCBP - positive
     IOCBPbits.IOCBP1 = 1;
     //interrupt on change for group IOCBP - positive
     IOCBPbits.IOCBP2 = 1;
-    //interrupt on change for group IOCCF - flag
-    IOCCFbits.IOCCF6 = 0;
-    //interrupt on change for group IOCCF - flag
-    IOCCFbits.IOCCF7 = 0;
-    //interrupt on change for group IOCCN - negative
-    IOCCNbits.IOCCN6 = 1;
-    //interrupt on change for group IOCCN - negative
-    IOCCNbits.IOCCN7 = 1;
-    //interrupt on change for group IOCCP - positive
-    IOCCPbits.IOCCP6 = 1;
-    //interrupt on change for group IOCCP - positive
-    IOCCPbits.IOCCP7 = 1;
 
 
 
     // register default IOC callback functions at runtime; use these methods to register a custom function
     IOCAF2_SetInterruptHandler(IOCAF2_DefaultInterruptHandler);
     IOCAF3_SetInterruptHandler(IOCAF3_DefaultInterruptHandler);
-    IOCBF0_SetInterruptHandler(IOCBF0_DefaultInterruptHandler);
     IOCBF1_SetInterruptHandler(IOCBF1_DefaultInterruptHandler);
     IOCBF2_SetInterruptHandler(IOCBF2_DefaultInterruptHandler);
-    IOCCF6_SetInterruptHandler(IOCCF6_DefaultInterruptHandler);
-    IOCCF7_SetInterruptHandler(IOCCF7_DefaultInterruptHandler);
    
     // Enable IOCI interrupt 
     PIE0bits.IOCIE = 1; 
@@ -188,7 +164,6 @@ void PIN_MANAGER_Initialize(void)
     INT0PPS = 0x0A;   //RB2->EXT_INT:INT0;    
     RC1PPS = 0x1F;   //RC1->SPI1:SDO1;    
     RB4PPS = 0x13;   //RB4->UART1:TX1;    
-    INT2PPS = 0x08;   //RB0->EXT_INT:INT2;    
     INT1PPS = 0x09;   //RB1->EXT_INT:INT1;    
     U1RXPPS = 0x0D;   //RB5->UART1:RX1;    
     SPI1SDIPPS = 0x12;   //RC2->SPI1:SDI1;    
@@ -206,11 +181,6 @@ void PIN_MANAGER_IOC(void)
     {
         IOCAF3_ISR();  
     }	
-	// interrupt on change for pin IOCBF0
-    if(IOCBFbits.IOCBF0 == 1)
-    {
-        IOCBF0_ISR();  
-    }	
 	// interrupt on change for pin IOCBF1
     if(IOCBFbits.IOCBF1 == 1)
     {
@@ -220,16 +190,6 @@ void PIN_MANAGER_IOC(void)
     if(IOCBFbits.IOCBF2 == 1)
     {
         IOCBF2_ISR();  
-    }	
-	// interrupt on change for pin IOCCF6
-    if(IOCCFbits.IOCCF6 == 1)
-    {
-        IOCCF6_ISR();  
-    }	
-	// interrupt on change for pin IOCCF7
-    if(IOCCFbits.IOCCF7 == 1)
-    {
-        IOCCF7_ISR();  
     }	
 }
 
@@ -294,36 +254,6 @@ void IOCAF3_DefaultInterruptHandler(void){
 }
 
 /**
-   IOCBF0 Interrupt Service Routine
-*/
-void IOCBF0_ISR(void) {
-
-    // Add custom IOCBF0 code
-
-    // Call the interrupt handler for the callback registered at runtime
-    if(IOCBF0_InterruptHandler)
-    {
-        IOCBF0_InterruptHandler();
-    }
-    IOCBFbits.IOCBF0 = 0;
-}
-
-/**
-  Allows selecting an interrupt handler for IOCBF0 at application runtime
-*/
-void IOCBF0_SetInterruptHandler(void (* InterruptHandler)(void)){
-    IOCBF0_InterruptHandler = InterruptHandler;
-}
-
-/**
-  Default interrupt handler for IOCBF0
-*/
-void IOCBF0_DefaultInterruptHandler(void){
-    // add your IOCBF0 interrupt custom code
-    // or set custom function using IOCBF0_SetInterruptHandler()
-}
-
-/**
    IOCBF1 Interrupt Service Routine
 */
 void IOCBF1_ISR(void) {
@@ -381,66 +311,6 @@ void IOCBF2_SetInterruptHandler(void (* InterruptHandler)(void)){
 void IOCBF2_DefaultInterruptHandler(void){
     // add your IOCBF2 interrupt custom code
     // or set custom function using IOCBF2_SetInterruptHandler()
-}
-
-/**
-   IOCCF6 Interrupt Service Routine
-*/
-void IOCCF6_ISR(void) {
-
-    // Add custom IOCCF6 code
-
-    // Call the interrupt handler for the callback registered at runtime
-    if(IOCCF6_InterruptHandler)
-    {
-        IOCCF6_InterruptHandler();
-    }
-    IOCCFbits.IOCCF6 = 0;
-}
-
-/**
-  Allows selecting an interrupt handler for IOCCF6 at application runtime
-*/
-void IOCCF6_SetInterruptHandler(void (* InterruptHandler)(void)){
-    IOCCF6_InterruptHandler = InterruptHandler;
-}
-
-/**
-  Default interrupt handler for IOCCF6
-*/
-void IOCCF6_DefaultInterruptHandler(void){
-    // add your IOCCF6 interrupt custom code
-    // or set custom function using IOCCF6_SetInterruptHandler()
-}
-
-/**
-   IOCCF7 Interrupt Service Routine
-*/
-void IOCCF7_ISR(void) {
-
-    // Add custom IOCCF7 code
-
-    // Call the interrupt handler for the callback registered at runtime
-    if(IOCCF7_InterruptHandler)
-    {
-        IOCCF7_InterruptHandler();
-    }
-    IOCCFbits.IOCCF7 = 0;
-}
-
-/**
-  Allows selecting an interrupt handler for IOCCF7 at application runtime
-*/
-void IOCCF7_SetInterruptHandler(void (* InterruptHandler)(void)){
-    IOCCF7_InterruptHandler = InterruptHandler;
-}
-
-/**
-  Default interrupt handler for IOCCF7
-*/
-void IOCCF7_DefaultInterruptHandler(void){
-    // add your IOCCF7 interrupt custom code
-    // or set custom function using IOCCF7_SetInterruptHandler()
 }
 
 /**

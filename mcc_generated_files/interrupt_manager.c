@@ -70,10 +70,6 @@ void __interrupt() INTERRUPT_InterruptManager (void)
     {
         INT1_ISR();
     }
-    else if(PIE7bits.INT2IE == 1 && PIR7bits.INT2IF == 1)
-    {
-        INT2_ISR();
-    }
     else if(PIE6bits.TMR3IE == 1 && PIR6bits.TMR3IF == 1)
     {
         TMR3_ISR();

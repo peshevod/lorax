@@ -316,5 +316,70 @@ void getinc_JoinNonce(uint8_t* joinnonce)
     for(uint8_t j=0;j<3;j++) DATAEE_WriteByte(dev_start+j,joinnonce[j]);
 }
 
+uint16_t get_TSLR2()
+{
+    uint8_t t0,t1;
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x3F;
+    TBLPTRH=0x00;
+    TBLPTRL=0x26;
+    INTERRUPT_GlobalInterruptDisable();
+    asm("TBLRDPOSTINC");
+    t0=TABLAT;
+    asm("TBLRD");
+    t1=TABLAT;
+    INTERRUPT_GlobalInterruptEnable();
+    return t1*256+t0;
+}
+
+uint16_t get_TSHR2()
+{
+    uint8_t t0,t1;
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x3F;
+    TBLPTRH=0x00;
+    TBLPTRL=0x2C;
+    INTERRUPT_GlobalInterruptDisable();
+    asm("TBLRDPOSTINC");
+    t0=TABLAT;
+    asm("TBLRD");
+    t1=TABLAT;
+    INTERRUPT_GlobalInterruptEnable();
+    return t1*256+t0;
+}
+
+uint16_t get_FVRA2X()
+{
+    uint8_t t0,t1;
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x3F;
+    TBLPTRH=0x00;
+    TBLPTRL=0x32;
+    INTERRUPT_GlobalInterruptDisable();
+    asm("TBLRDPOSTINC");
+    t0=TABLAT;
+    asm("TBLRD");
+    t1=TABLAT;
+    INTERRUPT_GlobalInterruptEnable();
+    return t1*256+t0;
+}
+
+uint16_t get_FVRA1X()
+{
+    uint8_t t0,t1;
+    NVMCON1bits.REG=1;
+    TBLPTRU=0x3F;
+    TBLPTRH=0x00;
+    TBLPTRL=0x30;
+    INTERRUPT_GlobalInterruptDisable();
+    asm("TBLRDPOSTINC");
+    t0=TABLAT;
+    asm("TBLRD");
+    t1=TABLAT;
+    INTERRUPT_GlobalInterruptEnable();
+    return t1*256+t0;
+}
+
+
 
 
