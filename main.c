@@ -86,15 +86,14 @@ void LoRaSleep(void);
 void LoRaWakeUp(void);
 uint8_t computeSensorPercent (uint16_t sensorValueToCompute);
 void readAndSend(void);
-void print_array(uint8_t* array);
+void print_array();
 void StartJoinProcedure(uint8_t param);
 
 
 uint8_t localDioStatus;
 uint8_t radio_buffer[256];
-uint8_t send_array[256];
+//uint8_t send_array[256];
 uint8_t mode,rep,t0,t1,rx_done;
-uint32_t num;
 uint32_t dt;
 uint32_t calibration_frequency, bandwidth;
 RadioError_t radio_err;
@@ -106,10 +105,11 @@ volatile uint8_t insleep;
 uint8_t spread_factor;
 GenericEui_t JoinEui, DevEui;
 uint32_t DenyTransmit, DenyReceive;
+Data_t data;
 
 extern char b[128];
 extern uint8_t trace;
-extern uint8_t rssi_reg, rssi_off;
+uint8_t rssi_off;
 extern uint8_t mui[16];
 extern uint8_t js_number;
 extern Profile_t joinServer;
@@ -118,6 +118,7 @@ extern uint32_t NetID;
 extern uint8_t DevAddr[4];
 extern Profile_t devices[MAX_EEPROM_RECORDS];
 extern LoRa_t loRa;
+Sensors_t sensors;
 
 char* errors[] = {
     "OK",
@@ -154,7 +155,7 @@ void LORAX_TxDone(uint16_t timeOnAir, uint8_t was_timeout)
     }
     else
     {
-        num++;
+        data.num++;
         set_s("REP",&rep);
         SwTimerSetTimeout(t1,MS_TO_TICKS(dt*1000));
     }
@@ -184,13 +185,14 @@ LorawanError_t  LORAX_RxDone(uint8_t* buffer, uint8_t buflen)
         send_chars(ui8toa(buflen,b));
     }
     send_chars(" rssi=");
-    if(RADIO_GetModulation()==MODULATION_FSK) send_chars(i32toa(-(rssi_reg/2),b));
-    else send_chars(i32toa((uint32_t)rssi_reg-157,b));
+    int32_t x=data.rssi-157;
+    if(RADIO_GetModulation()==MODULATION_FSK) send_chars(i32toa(-x/2,b));
+    else send_chars(i32toa(x-157,b));
     send_chars(", snr=");
-    int32_t snr=RADIO_GetPacketSnr();
-    send_chars(i32toa(snr,b));
+    x=data.snr;
+    send_chars(i32toa(x,b));
     send_chars(", ");
-    print_array(buffer);
+    print_array();
     RADIO_ReleaseData();
     rx_done=1;
 }
@@ -208,7 +210,7 @@ void SX1276_Reset(void)
     while(SwTimerIsRunning(t_nreset)) SwTimersExecute();
  }
 
-void print_array(uint8_t* array)
+void print_array(void)
 {
     switch(mode)
     {
@@ -223,14 +225,35 @@ void print_array(uint8_t* array)
             break;
     }
     send_chars("uid=");
-    send_chars(ui32tox(((uint32_t*)array)[0],b));
+    send_chars(ui32tox(data.uid,b));
     send_chars(", n=");
-    send_chars(ui32toa(((uint32_t*)array)[1],b));
+    send_chars(ui32toa(data.num,b));
     if(mode != MODE_DEVICE)
     {
         send_chars(", rep=");
-        send_chars(ui8toa(array[8],b));
+        send_chars(ui8toa(data.power,b));
     }
+    else
+    {
+        int32_t pow=data.power;
+        send_chars(", power=");
+        send_chars(i32toa(pow,b));
+    }
+    send_chars(", Temperature=");
+    int32_t x=data.temperature;
+    send_chars(i32toa(x,b));
+    send_chars(", BatteryLevel=");
+    send_chars(ui8toa(data.batLevel,b));
+    send_chars(", RSSI=");
+    int32_t rssi=-157+ (data.snr>=0 ? 16*data.rssi/15 : data.rssi+data.snr/4);
+    send_chars(i32toa(rssi,b));
+    send_chars(", SNR=");
+    int32_t snr=data.snr;
+    send_chars(i32toa(snr,b));
+    send_chars(", SensorsMode=");
+    send_chars(ui8tox(data.sensors.bytes[0],b));
+    send_chars(", SensorsValues=");
+    send_chars(ui8tox(data.sensors.bytes[1],b));
     send_chars("\r\n");
 }
 void print_error(LorawanError_t err)
@@ -244,11 +267,10 @@ void print_error(LorawanError_t err)
 
 void Transmit_array(void)
 {
-    ((uint32_t*)send_array)[1]=num;
-    send_array[8]=rep;
+    data.power=rep;
     RADIO_SetWatchdogTimeout(3000);
-    print_array(send_array);
-    radio_err=RADIO_Transmit(send_array, 16);   
+    print_array();
+    radio_err=RADIO_Transmit(&data, sizeof(data));   
 }
 
 void compute_nco(void)
@@ -301,15 +323,9 @@ void main(void)
     TMR_ISR_Lora_Init();
     
     
-    send_chars("\r\nuid=");
-    send_chars(ui32tox(uid,b));
-    send_chars("\r\nBatteryLevel=");
-    uint8_t bat_level=getBatteryLevel();
-    send_chars(ui8toa(bat_level,b));
-    send_chars("\r\nTemperature=");
-    int32_t temperature=getTemperature();
-    send_chars(i32toa(temperature,b));
-    send_chars("\r\n");
+    data.uid=uid;
+    data.num=0;
+    print_array();
     
 /*    send_chars("mui=");
     get_mui(mui);
@@ -342,11 +358,8 @@ void main(void)
             t0=SwTimerCreate();
             t1=SwTimerCreate();
             rep--;
-            num=0;
-            ((uint32_t*)send_array)[0]=uid;
-            for(uint8_t j=9;j<16;j++) send_array[j]=j;
-            ((uint32_t*)send_array)[1]=num;
-            send_array[8]=rep;
+            data.num=0;
+            data.power=rep;
             while(1)
             {
                 SwTimerSetTimeout(t0, MS_TO_TICKS(dt*1000));
@@ -570,7 +583,7 @@ void SysConfigSleep(void)
     TMR2MD = 1;
 //    TMR0MD = 1;
     DACMD  = 1;
-    ADCMD  = 1;
+//    ADCMD  = 1;
     CMP2MD = 1;
     CMP1MD = 1;
     ZCDMD  = 1;
@@ -671,18 +684,19 @@ void LoRaWakeUp(void)
 
 void readAndSend(void)
 {
-    ((uint32_t*)send_array)[0]=uid;
-    ((uint32_t*)send_array)[1]=num;
-    print_array(send_array);
+    data.temperature=getTemperature();
+    data.batLevel=getBatteryLevel();
+    
+    print_array();
     LorawanError_t err;
     //send with LORA
 //    LorawanError_t err=LORAWAN_SetCurrentDataRate (datarate);
 //    if(err!=OK) print_error(err);
 //    err=LORAWAN_SetTxPower (5);
 //    if(err!=OK) print_error(err);
-    err=LORAWAN_Send(CNF, 2, send_array, 8);
+    err=LORAWAN_Send(CNF, 2, &data, sizeof(data));
     if(err!=OK) print_error(err);
-    num++;
+    data.num++;
 }
 /**
  End of File

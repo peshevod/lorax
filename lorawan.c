@@ -1297,7 +1297,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
     RADIO_ReleaseData();
 
 //    send_chars("Received!!!\r\n");
-    
+      
     temp=(buffer[0]&0xE0)>>5;
     printVar("Received frame type=",PAR_UI8,&temp,false,true);
     if (loRa.macStatus.macPause == DISABLED)

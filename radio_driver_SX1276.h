@@ -130,6 +130,57 @@ typedef enum
 } RadioError_t;
 
 
+// These enums need to be set according to the definition in the radio
+// datasheet
+typedef enum
+{
+    MODE_SLEEP = 0,
+    MODE_STANDBY,
+    MODE_FSTX,
+    MODE_TX,
+    MODE_FSRX,
+    MODE_RXCONT,
+    MODE_RXSINGLE,
+    MODE_CAD,
+} RadioMode_t;
+
+typedef struct
+{
+    uint32_t frequency;
+    uint32_t frequencyDeviation;
+    uint32_t bitRate;
+    uint16_t preambleLen;
+    uint8_t syncWordLoRa;
+    uint8_t syncWord[8];
+    uint8_t syncWordLen;
+    RadioModulation_t modulation;
+    RadioDataRate_t dataRate;
+    RadioLoRaBandWidth_t bandWidth;
+    int8_t outputPower;
+    uint8_t crcOn;
+    uint8_t paBoost;
+    uint16_t frequencyHopPeriod;
+    uint8_t iqInverted;
+    RadioErrorCodingRate_t errorCodingRate;
+    uint8_t implicitHeaderMode;
+    uint8_t flags;
+    uint8_t dataBufferLen;
+    uint8_t *dataBuffer;
+    uint8_t timeOnAirTimerId;
+    uint8_t fskRxWindowTimerId;
+    uint8_t watchdogTimerId;
+    uint32_t watchdogTimerTimeout;
+    uint8_t initialized;
+    uint32_t (*fhssNextFrequency)(void);
+    uint8_t regVersion;
+//    int8_t packetSNR;
+//    uint8_t packetRSSI;
+    RadioFSKShaping_t fskDataShaping;
+    RadioFSKBandWidth_t rxBw;
+    RadioFSKBandWidth_t afcBw;
+} RadioConfiguration_t;
+
+
 #define RADIO_FLAG_TRANSMITTING         BIT0
 #define RADIO_FLAG_RECEIVING            BIT1
 #define RADIO_FLAG_RXDATA               BIT2

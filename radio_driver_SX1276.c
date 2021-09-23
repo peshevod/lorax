@@ -45,60 +45,10 @@
 #include "lorax_radio.h"
 #include "sw_timer.h"
 #include "shell.h"
+#include "measurements.h"
 
 #define TIME_ON_AIR_LOAD_VALUE              ((uint32_t)20000)
 #define WATCHDOG_DEFAULT_TIME               ((uint32_t)15000)
-
-
-// These enums need to be set according to the definition in the radio
-// datasheet
-typedef enum
-{
-    MODE_SLEEP = 0,
-    MODE_STANDBY,
-    MODE_FSTX,
-    MODE_TX,
-    MODE_FSRX,
-    MODE_RXCONT,
-    MODE_RXSINGLE,
-    MODE_CAD,
-} RadioMode_t;
-
-typedef struct
-{
-    uint32_t frequency;
-    uint32_t frequencyDeviation;
-    uint32_t bitRate;
-    uint16_t preambleLen;
-    uint8_t syncWordLoRa;
-    uint8_t syncWord[8];
-    uint8_t syncWordLen;
-    RadioModulation_t modulation;
-    RadioDataRate_t dataRate;
-    RadioLoRaBandWidth_t bandWidth;
-    int8_t outputPower;
-    uint8_t crcOn;
-    uint8_t paBoost;
-    uint16_t frequencyHopPeriod;
-    uint8_t iqInverted;
-    RadioErrorCodingRate_t errorCodingRate;
-    uint8_t implicitHeaderMode;
-    uint8_t flags;
-    uint8_t dataBufferLen;
-    uint8_t *dataBuffer;
-    uint8_t timeOnAirTimerId;
-    uint8_t fskRxWindowTimerId;
-    uint8_t watchdogTimerId;
-    uint32_t watchdogTimerTimeout;
-    uint8_t initialized;
-    uint32_t (*fhssNextFrequency)(void);
-    uint8_t regVersion;
-    int8_t packetSNR;
-    RadioFSKShaping_t fskDataShaping;
-    RadioFSKBandWidth_t rxBw;
-    RadioFSKBandWidth_t afcBw;
-} RadioConfiguration_t;
-
 
 
 static RadioConfiguration_t RadioConfiguration;
@@ -124,12 +74,14 @@ static void RADIO_FHSSChangeChannel(void);
 
 uint8_t b[128];
 uint8_t trace;
-uint8_t rssi_reg, rssi_off;
+extern uint8_t rssi_off;
 extern uint8_t mode;
 extern uint32_t bandwidth;
 extern uint8_t spread_factor;
 uint8_t rectimer;
 uint32_t rectimer_value, delta, ticks, ticks_old;
+extern Data_t data;
+
 
 void RADIO_RegisterWrite(uint8_t reg, uint8_t value)
 {
@@ -441,6 +393,7 @@ static void RADIO_WritePower(int8_t power)
         RADIO_RegisterWrite(REG_PACONFIG, 0x80 | power);
         RADIO_RegisterWrite(REG_OCP, ocp);
     }
+    data.power=power;
 }
 
 void RADIO_Init(uint8_t *radioBuffer, uint32_t frequency)
@@ -494,7 +447,6 @@ void RADIO_Init(uint8_t *radioBuffer, uint32_t frequency)
     RadioConfiguration.dataBufferLen = 0;
     RadioConfiguration.dataBuffer = radioBuffer;
     RadioConfiguration.frequencyHopPeriod = 0;
-    set_s("SNR",&RadioConfiguration.packetSNR); // = -128;
     RadioConfiguration.watchdogTimerTimeout = WATCHDOG_DEFAULT_TIME;
     set_s("MODULATION",&tmp8);
     if(tmp8) RadioConfiguration.fskDataShaping = tmp8-1; //FSK_SHAPING_GAUSS_BT_0_5;
@@ -1056,18 +1008,21 @@ static void RADIO_RxDone(void)
         
         // Read CRC info from received packet header
         i = RADIO_RegisterRead(REG_LORA_HOPCHANNEL);
-        rssi_reg=RADIO_RegisterRead(REG_LORA_PKTRSSIVALUE);
-        RadioConfiguration.packetSNR = RADIO_RegisterRead(REG_LORA_PKTSNRVALUE);
-        RadioConfiguration.packetSNR /= (int8_t)4;
         SwTimersInterrupt();
         if(SwTimerIsRunning(rectimer))
         {
             ticks=MS_TO_TICKS(rectimer_value)-SwTimerReadValue(rectimer);
             delta=TICKS_TO_MS(ticks-ticks_old);
             ticks_old=ticks;
-            uint32_t SNR=RadioConfiguration.packetSNR;
+            data.rssi=RADIO_RegisterRead(REG_LORA_PKTRSSIVALUE);
+            data.snr = RADIO_RegisterRead(REG_LORA_PKTSNRVALUE);
+            data.snr /= (int8_t)4;
+            int32_t RSSI=-157+ (data.snr>=0 ? 16*data.rssi/15 : data.rssi+data.snr/4);
             printVar(" Received! delta=",PAR_UI32,&delta,false,false);
-            printVar(" snr=",PAR_I32,&SNR,false,false);
+            int32_t x=data.snr;
+            printVar(" snr=",PAR_I32,&x,false,false);
+            x=-157+( x>=0 ? 16*data.rssi/15 : data.rssi+x/4 );
+            printVar(" rssi=",PAR_I32,&x,false,false);
         }
         if ((0 == RadioConfiguration.crcOn) || ((0 == (irqFlags & (1<<SHIFT5))) && (0 != (i & (1<<SHIFT6)))))
         {
@@ -1128,12 +1083,10 @@ static void RADIO_FSKPayloadReady(void)
             RadioConfiguration.dataBuffer[i] = HALSPISend(0xFF);
         }
         HALSPICSDeassert();
-        rssi_reg=RADIO_RegisterRead(REG_FSK_RSSIVALUE);
+        data.rssi=RADIO_RegisterRead(REG_FSK_RSSIVALUE);
         rssi_off=RADIO_RegisterRead(REG_FSK_RSSICONFIG);
         RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
         RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
-
-        RadioConfiguration.packetSNR = -128;
 
         if (1 == RadioConfiguration.crcOn)
         {
@@ -1548,7 +1501,7 @@ static void RADIO_WatchdogTimeout(uint8_t param)
 
 int8_t RADIO_GetPacketSnr(void)
 {
-    return RadioConfiguration.packetSNR;
+    return data.snr;
 }
 
 void RADIO_SetSpreadingFactor(RadioDataRate_t spreadingFactor)
