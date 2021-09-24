@@ -27,7 +27,7 @@ _par_t _pars[]={
     {PAR_I32,"Power",{ 1 }, "Power, dbm",VISIBLE },
     {PAR_UI8,"Boost",{ 0 }, "PA Boost 1: PABoost ON 0: PABoost OFF",VISIBLE },
     {PAR_UI8,"IQ_Inverted",{ 0 }, "LORA 0: IqInverted OFF 1: IqInverted ON",VISIBLE },
-    {PAR_UI8,"Mode",{ 2 }, "Mode 0:receive, 1:transmit, 2:device, 3:simple gateway",VISIBLE },
+    {PAR_UI8,"Mode",{ 2 }, "Mode 0:receive, 1:transmit, 2:device",VISIBLE },
     {PAR_UI32,"Preamble_Len",{ 8 }, "Preamble length",VISIBLE },
     {PAR_UI32,"UID",{ 0x12345678 }, "UID",VISIBLE },
     {PAR_UI8,"LORA_SyncWord",{ 0x34 }, "LORA Sync Word",VISIBLE },

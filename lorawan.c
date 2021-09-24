@@ -922,7 +922,7 @@ void LORAWAN_Receive(void)
     };
 }
 
-void LORAWAN_SendDownAckCallback (uint8_t param)
+/*void LORAWAN_SendDownAckCallback (uint8_t param)
 {
     uint32_t freq;
     
@@ -949,9 +949,9 @@ void LORAWAN_SendDownAckCallback (uint8_t param)
             devices[param].macStatus.macState = MAC_STATE_NOT_READY_FOR_TRANSMISSION;
         }
     }
-}
+}*/
 
-void LORAWAN_SendJoinAcceptCallback (uint8_t param)
+/*void LORAWAN_SendJoinAcceptCallback (uint8_t param)
 {
     uint32_t freq;
     
@@ -977,7 +977,7 @@ void LORAWAN_SendJoinAcceptCallback (uint8_t param)
             loRa.macStatus.macState = MAC_STATE_NOT_READY_FOR_TRANSMISSION;
         }
     }
-}
+}*/
 
 
 __reentrant void LORAWAN_ReceiveWindow2Callback(uint8_t param)
@@ -1306,12 +1306,6 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
         if ( (mhdr.bits.mType == FRAME_TYPE_JOIN_ACCEPT) && (loRa.activationParameters.activationType == OTAA) )
         {
             SwTimerStop(loRa.virtualTimer);
-            if(mode==MODE_NETWORK_SERVER)
-            {
-                loRa.macStatus.macState = IDLE;
-                return INVALID_PARAMETER;
-            }
-            
             printVar("Received join accept length=",PAR_UI8,&bufferLength,false,true);
             temp = bufferLength - 1; //MHDR not encrypted
             while (temp > 0) 
@@ -1369,7 +1363,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
 
             return OK;
         }
-        else if ( (mhdr.bits.mType == FRAME_TYPE_JOIN_REQ) && (loRa.activationParameters.activationType == OTAA) )
+/*        else if ( (mhdr.bits.mType == FRAME_TYPE_JOIN_REQ) && (loRa.activationParameters.activationType == OTAA) )
         {
             printVar("Received Join Request Frame length=",PAR_UI8,&bufferLength,false,true);
             
@@ -1447,14 +1441,9 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
             
             return OK;
 
-        }
+        }*/
         else if ( (mhdr.bits.mType == FRAME_TYPE_DATA_UNCONFIRMED_DOWN) || (mhdr.bits.mType == FRAME_TYPE_DATA_CONFIRMED_DOWN) )
         {
-            if(mode==MODE_NETWORK_SERVER)
-            {
-                loRa.macStatus.macState = IDLE;
-                return INVALID_PARAMETER;
-            }
             loRa.crtMacCmdIndex = 0;   // clear the macCommands requests list
 
             Hdr_t *hdr;
@@ -1799,7 +1788,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
                 LORAWAN_EnterContinuousReceive();
             }
         }
-        else if ( mhdr.bits.mType == FRAME_TYPE_DATA_UNCONFIRMED_UP || mhdr.bits.mType == FRAME_TYPE_DATA_CONFIRMED_UP )
+/*        else if ( mhdr.bits.mType == FRAME_TYPE_DATA_UNCONFIRMED_UP || mhdr.bits.mType == FRAME_TYPE_DATA_CONFIRMED_UP )
         {
             Hdr_t *hdr;
             hdr=(Hdr_t*)buffer;
@@ -1897,7 +1886,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
             loRa.macStatus.macState=IDLE;
             send_chars("NSRxDone OK\r\n");
             return OK;
-        }
+        }*/
         else
         {
             //if the mType is incorrect, set reception not OK state
@@ -1924,7 +1913,7 @@ LorawanError_t LORAWAN_RxDone (uint8_t *buffer, uint8_t bufferLength)
     return OK;
 }
 
-LorawanError_t LORAWAN_NSRxDone (uint8_t *buffer, uint8_t bufferLength)
+/*LorawanError_t LORAWAN_NSRxDone (uint8_t *buffer, uint8_t bufferLength)
 {
     uint32_t computedMic, extractedMic;
     Mhdr_t mhdr;
@@ -2034,7 +2023,7 @@ LorawanError_t LORAWAN_NSRxDone (uint8_t *buffer, uint8_t bufferLength)
     loRa.macStatus.macState = BEFORE_ACK;
     send_chars("NSRxDone OK\r\n");
     return OK;
-}
+}*/
 
 static uint8_t LORAWAN_GetMaxPayloadSize (void)
 {
@@ -2284,7 +2273,7 @@ static void AssemblePacket (bool confirmed, uint8_t port, uint8_t *buffer, uint1
    loRa.lastPacketLength = bufferIndex - 16;
 }
 
-static void AssembleAckPacket (uint8_t dev_number)
+/*static void AssembleAckPacket (uint8_t dev_number)
 {
     Mhdr_t mhdr;
     uint8_t bufferIndex = 16;
@@ -2321,7 +2310,7 @@ static void AssembleAckPacket (uint8_t dev_number)
    bufferIndex = bufferIndex + 4; // 4 is the size of MIC
 
    loRa.lastPacketLength = bufferIndex - 16;
-}
+}*/
 
 static uint8_t PrepareJoinRequestFrame (void)
 {
@@ -2365,7 +2354,7 @@ static uint8_t PrepareJoinRequestFrame (void)
     return bufferIndex;
 }
 
-static uint8_t PrepareJoinAcceptFrame (uint8_t dev_number)
+/*static uint8_t PrepareJoinAcceptFrame (uint8_t dev_number)
 {
     uint8_t iCtr;
     Mhdr_t mhdr;
@@ -2417,7 +2406,7 @@ static uint8_t PrepareJoinAcceptFrame (uint8_t dev_number)
        }               
     }
     return devices[dev_number].bufferIndex;
-}
+}*/
 
 static void IncludeMacCommandsResponse (uint8_t* macBuffer, uint8_t* pBufferIndex, uint8_t bIncludeInFopts )
 {
@@ -2542,7 +2531,7 @@ static bool FindSmallestDataRate (void)
     uint8_t  i = 0, dataRate;
     bool found = false;
 
-    if ((loRa.currentDataRate > loRa.minDataRate) && !(mode==MODE_SEND || mode==MODE_REC || mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER))
+    if ((loRa.currentDataRate > loRa.minDataRate) && !(mode==MODE_SEND || mode==MODE_REC || mode==MODE_DEVICE))
     {
         dataRate = loRa.currentDataRate - 1;
 
@@ -2656,7 +2645,7 @@ static void DeviceComputeSessionKeys (JoinAccept_t *joinAcceptBuffer)
     AESEncodeLoRa(loRa.activationParameters.networkSessionKey, loRa.activationParameters.applicationKey);
 }
 
-static void NetworkComputeSessionKeys (uint8_t dn)
+/*static void NetworkComputeSessionKeys (uint8_t dn)
 {
     PrepareSessionKeys(devices[dn].AppSKey, JoinNonce, (uint8_t*)(&NetID), &(devices[dn].DevNonce));
     devices[dn].AppSKey[0] = 0x02; // used for Network Session Key
@@ -2665,7 +2654,7 @@ static void NetworkComputeSessionKeys (uint8_t dn)
     PrepareSessionKeys(devices[dn].NwkSKey, JoinNonce, (uint8_t*)(&NetID), &(devices[dn].DevNonce));
     devices[dn].NwkSKey[0] = 0x01; // used for Network Session Key
     AESEncodeLoRa(devices[dn].NwkSKey, loRa.activationParameters.applicationKey);
-}
+}*/
 
 //Based on the last packet received, this function checks the flags and updates the state accordingly
 static void CheckFlags (Hdr_t* hdr)
@@ -2919,7 +2908,7 @@ uint8_t selectJoinServer(Profile_t* joinServer)
     return js;
 }
 
-uint8_t fill_devices(void)
+/*uint8_t fill_devices(void)
 {
     char devName[9];
     GenericEui_t devEui;
@@ -2992,9 +2981,9 @@ uint8_t fill_devices(void)
 //        }
     }
     return js;
-}
+}*/
 
-void calculate_NwkID(void)
+/*void calculate_NwkID(void)
 {
     uint8_t ids[8]={6,6,9,11,12,13,15,17};
     NwkID_mask=1;
@@ -3016,16 +3005,16 @@ void calculate_NwkID(void)
     send_chars(" NwkID_mask=");
     send_chars(ui32tox(NwkID_mask,b));
     send_chars("\r\n");
-}
+}*/
 
-uint32_t get_nextDevAddr(DeviceAddress_t* devaddr)
+/*uint32_t get_nextDevAddr(DeviceAddress_t* devaddr)
 {
     devaddr->value++;
     devaddr->value&=~NwkID_mask;
     devaddr->value|=NwkID;
     printVar("DevAddr=",PAR_UI32,&devaddr->value,true,true);
     return devaddr->value;
-}
+}*/
 
 uint8_t LORAWAN_GetState(void)
 {

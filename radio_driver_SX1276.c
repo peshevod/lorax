@@ -662,9 +662,6 @@ static void RADIO_WriteConfiguration(uint16_t symbolTimeout)
         }
 
         regValue = RADIO_RegisterRead(REG_LORA_INVERTIQ);
-//        regValue &= ~(1 << SHIFT6);                                        // Clear InvertIQ bit
-//        if(mode==MODE_NETWORK_SERVER) regValue &= ~(1 << SHIFT0); else regValue |= (1 << SHIFT0);
-//        if(mode==MODE_DEVICE) regValue |= (1 << SHIFT6); else regValue &= ~(1 << SHIFT6);    // Set InvertIQ bit if needed   
         if(RadioConfiguration.iqInverted & 0x01)
         {
             regValue &= ~(1 << SHIFT0);
@@ -901,7 +898,7 @@ RadioError_t RADIO_Transmit(uint8_t *buffer, uint8_t bufferLen)
         SwTimerSetTimeout(RadioConfiguration.watchdogTimerId, MS_TO_TICKS(RadioConfiguration.watchdogTimerTimeout));
         SwTimerStart(RadioConfiguration.watchdogTimerId);
     }
-
+    data.batLevel=getBatteryLevel();
     return ERR_NONE;
 }
 
@@ -1055,7 +1052,7 @@ static void RADIO_RxDone(void)
         send_chars("\r\n");
         RADIO_WriteMode(MODE_SLEEP, RadioConfiguration.modulation, 0);
         RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
-        if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
+        if(mode==MODE_DEVICE) LORAWAN_RxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
         else LORAX_RxDone(RadioConfiguration.dataBuffer, RadioConfiguration.dataBufferLen);
     }
 }
@@ -1127,7 +1124,7 @@ static void RADIO_RxTimeout(void)
     RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
 
     send_chars(" RXTimeout");
-    if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxTimeout();
+    if(mode==MODE_DEVICE) LORAWAN_RxTimeout();
     else
         LORAX_RxTimeout();
 }
@@ -1145,11 +1142,6 @@ static void RADIO_TxDone(void)
     {
         timeOnAir = TIME_ON_AIR_LOAD_VALUE - TICKS_TO_MS(SwTimerReadValue(RadioConfiguration.timeOnAirTimerId));
         if(mode==MODE_DEVICE) LORAWAN_TxDone((uint16_t)timeOnAir);
-        else if(mode==MODE_NETWORK_SERVER)
-        {
-//            RADIO_ReceiveStart(0);
-            LORAWAN_TxDone((uint16_t)timeOnAir);
-        }
         else LORAX_TxDone((uint16_t)timeOnAir,0);
     };
 }
@@ -1484,7 +1476,7 @@ static void RADIO_WatchdogTimeout(uint8_t param)
     {
         RadioConfiguration.flags &= ~RADIO_FLAG_RECEIVING;
         send_chars("RX Watchdog Timeout\r\n");
-        if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_RxTimeout();
+        if(mode==MODE_DEVICE) LORAWAN_RxTimeout();
         else LORAX_RxTimeout();
     }
     else if ((RadioConfiguration.flags & RADIO_FLAG_TRANSMITTING) != 0)
@@ -1494,7 +1486,7 @@ static void RADIO_WatchdogTimeout(uint8_t param)
         // this time-out occured we cannot know for sure that the radio did not
         // transmit this whole time, so this is the safest way to go (block the
         // channel for a really long time from now on).
-        if(mode==MODE_DEVICE || mode==MODE_NETWORK_SERVER) LORAWAN_TxDone(RadioConfiguration.watchdogTimerTimeout);
+        if(mode==MODE_DEVICE) LORAWAN_TxDone(RadioConfiguration.watchdogTimerTimeout);
         else LORAX_TxDone(RadioConfiguration.watchdogTimerTimeout,1);
     }
 }

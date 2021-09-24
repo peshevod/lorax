@@ -1484,25 +1484,25 @@ void LORAWAN_Mainloop (void);
 
 void print_error(LorawanError_t err);
 
-void LORAWAN_SendDownAckCallback (uint8_t param);
-void LORAWAN_SendJoinAcceptCallback (uint8_t param);
+//void LORAWAN_SendDownAckCallback (uint8_t param);
+//void LORAWAN_SendJoinAcceptCallback (uint8_t param);
 void LORAWAN_Receive(void);
 uint8_t selectJoinServer(Profile_t* joinServer);
 uint8_t euicmpnz(GenericEui_t* eui);
 uint8_t euicmp(GenericEui_t* eui1, GenericEui_t* eui2);
 uint8_t euicmpr(GenericEui_t* eui1, GenericEui_t* eui2);
 void LORAWAN_SetActivationType(ActivationType_t activationTypeNew);
-uint8_t fill_devices(void);
+//uint8_t fill_devices(void);
 uint8_t get_Eui(uint8_t n,GenericEui_t* deveui);
 uint8_t put_Eui(uint8_t n,GenericEui_t* deveui);
-void put_DevNonce( uint8_t n, uint16_t devnonce);
-uint16_t get_DevNonce(uint8_t n);
-void put_JoinNonce(uint8_t* joinnonce);
-void get_JoinNonce(uint8_t* joinnonce);
-void get_NetID(uint8_t* netid);
-void calculate_NwkID(void);
-uint32_t get_nextDevAddr(DeviceAddress_t* devaddr);
-void getinc_JoinNonce(uint8_t* joinnonce);
+//void put_DevNonce( uint8_t n, uint16_t devnonce);
+//uint16_t get_DevNonce(uint8_t n);
+//void put_JoinNonce(uint8_t* joinnonce);
+//void get_JoinNonce(uint8_t* joinnonce);
+//void get_NetID(uint8_t* netid);
+//void calculate_NwkID(void);
+//uint32_t get_nextDevAddr(DeviceAddress_t* devaddr);
+//void getinc_JoinNonce(uint8_t* joinnonce);
 
 
 

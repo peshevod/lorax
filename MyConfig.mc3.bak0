@@ -5315,6 +5315,10 @@
          <value>%DESELECT%</value>
       </entry>
       <entry>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="T6INPPS%aux9"/>
+         <value>%DESELECT%</value>
+      </entry>
+      <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="U1CTSPPS%aux6"/>
          <value>%DESELECT%</value>
       </entry>
@@ -8240,7 +8244,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="Pin Module" registerAlias="SLRCONC"/>
-         <value>241</value>
+         <value>255</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="Pin Module" registerAlias="SMT1SIGPPS"/>
@@ -9356,15 +9360,15 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="SLRCONC" settingAlias="SLRC1"/>
-         <value>maximum</value>
+         <value>limited</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="SLRCONC" settingAlias="SLRC2"/>
-         <value>maximum</value>
+         <value>limited</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="SLRCONC" settingAlias="SLRC3"/>
-         <value>maximum</value>
+         <value>limited</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="SLRCONC" settingAlias="SLRC4"/>
@@ -9656,7 +9660,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPI1" name="ActClkSpeed"/>
-         <value>8000000.000</value>
+         <value>4000000.000</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPI1" name="SPI1_SPIIISRFunction"/>
@@ -9708,7 +9712,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPI1" name="inputDataSampled"/>
-         <value>End</value>
+         <value>Middle</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPI1" name="isInterruptDriven"/>
@@ -9716,7 +9720,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPI1" name="spiClockDivider"/>
-         <value>0</value>
+         <value>1</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPI1" name="spiComMode"/>
@@ -10032,7 +10036,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="SPI1" registerAlias="SPIBAUD"/>
-         <value>0</value>
+         <value>1</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="SPI1" registerAlias="SPICLK"/>
@@ -10044,7 +10048,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="SPI1" registerAlias="SPICON1"/>
-         <value>192</value>
+         <value>64</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="SPI1" registerAlias="SPICON2"/>
@@ -10080,7 +10084,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="SPI1" registerAlias="SPIBAUD" settingAlias="BAUD"/>
-         <value>0</value>
+         <value>1</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="SPI1" registerAlias="SPICLK" settingAlias="CLKSEL"/>
@@ -10124,7 +10128,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="SPI1" registerAlias="SPICON1" settingAlias="SMP"/>
-         <value>End</value>
+         <value>Middle</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="SPI1" registerAlias="SPICON1" settingAlias="SSP"/>
@@ -12834,7 +12838,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\spi1.c</file>
-         <hash>b47b3ec694e1ee37c9a2db7e6f2d4e7f312a7e3dd9b645560560e468a3e508e2</hash>
+         <hash>088e43ebb08c65c09e623a1c7e452bed0404c899edf6267b608d94c8dabd2be7</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\adcc.c</file>
@@ -12910,7 +12914,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\pin_manager.c</file>
-         <hash>a3b09faed41a2e7b34bb2220bcf53cde664d32b9221ae98fb37859b2375da2dc</hash>
+         <hash>1ecc8f16c024bfbebf7becde7c8ce7d1b368c01168f0182ab13e2d37fd70bdc8</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\hlvd.c</file>

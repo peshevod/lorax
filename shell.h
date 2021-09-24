@@ -35,7 +35,7 @@ typedef enum
     MODE_REC=0,
     MODE_SEND,
     MODE_DEVICE,        
-    MODE_NETWORK_SERVER
+//    MODE_NETWORK_SERVER
 } mode_t;
 
 

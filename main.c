@@ -93,7 +93,7 @@ void StartJoinProcedure(uint8_t param);
 uint8_t localDioStatus;
 uint8_t radio_buffer[256];
 //uint8_t send_array[256];
-uint8_t mode,rep,t0,t1,rx_done;
+uint8_t mode,t0,t1,rx_done;
 uint32_t dt;
 uint32_t calibration_frequency, bandwidth;
 RadioError_t radio_err;
@@ -147,20 +147,10 @@ void LORAX_TxDone(uint16_t timeOnAir, uint8_t was_timeout)
         send_chars(ui32toa((uint32_t)timeOnAir,b));
         send_chars("\r\n");
     }
-    else
-        send_chars("TX Timeout while packet send\r\n");
-    if(rep!=0)
-    {
-        SwTimerSetTimeout(t1,MS_TO_TICKS(1000));
-    }
-    else
-    {
-        data.num++;
-        set_s("REP",&rep);
-        SwTimerSetTimeout(t1,MS_TO_TICKS(dt*1000));
-    }
+    else send_chars("TX Timeout while packet send\r\n");
+    if(mode!=MODE_DEVICE) ((uint8_t*)(&data.temperature))[7]++;
+    SwTimerSetTimeout(t1,MS_TO_TICKS(dt*1000));
     SwTimerStart(t1);
-    rep--;
 }
 
 void LORAX_RxTimeout(void)
@@ -184,14 +174,6 @@ LorawanError_t  LORAX_RxDone(uint8_t* buffer, uint8_t buflen)
     {
         send_chars(ui8toa(buflen,b));
     }
-    send_chars(" rssi=");
-    int32_t x=data.rssi-157;
-    if(RADIO_GetModulation()==MODULATION_FSK) send_chars(i32toa(-x/2,b));
-    else send_chars(i32toa(x-157,b));
-    send_chars(", snr=");
-    x=data.snr;
-    send_chars(i32toa(x,b));
-    send_chars(", ");
     print_array();
     RADIO_ReleaseData();
     rx_done=1;
@@ -224,36 +206,34 @@ void print_array(void)
             send_chars("Send ");
             break;
     }
-    send_chars("uid=");
-    send_chars(ui32tox(data.uid,b));
-    send_chars(", n=");
-    send_chars(ui32toa(data.num,b));
     if(mode != MODE_DEVICE)
     {
-        send_chars(", rep=");
-        send_chars(ui8toa(data.power,b));
+        send_chars("uid=");
+        send_chars(ui32tox(*((uint32_t*)(&data.temperature)),b));
+        send_chars(", n=");
+        send_chars(ui32tox(*((uint32_t*)(&data.snr)),b));
     }
     else
     {
         int32_t pow=data.power;
         send_chars(", power=");
         send_chars(i32toa(pow,b));
+        send_chars(", Temperature=");
+        int32_t x=data.temperature;
+        send_chars(i32toa(x,b));
+        send_chars(", BatteryLevel=");
+        send_chars(ui8toa(data.batLevel,b));
+        send_chars(", RSSI=");
+        int32_t rssi=-157+ (data.snr>=0 ? 16*data.rssi/15 : data.rssi+data.snr/4);
+        send_chars(i32toa(rssi,b));
+        send_chars(", SNR=");
+        int32_t snr=data.snr;
+        send_chars(i32toa(snr,b));
+        send_chars(", SensorsMode=");
+        send_chars(ui8tox(data.sensors.bytes[0],b));
+        send_chars(", SensorsValues=");
+        send_chars(ui8tox(data.sensors.bytes[1],b));
     }
-    send_chars(", Temperature=");
-    int32_t x=data.temperature;
-    send_chars(i32toa(x,b));
-    send_chars(", BatteryLevel=");
-    send_chars(ui8toa(data.batLevel,b));
-    send_chars(", RSSI=");
-    int32_t rssi=-157+ (data.snr>=0 ? 16*data.rssi/15 : data.rssi+data.snr/4);
-    send_chars(i32toa(rssi,b));
-    send_chars(", SNR=");
-    int32_t snr=data.snr;
-    send_chars(i32toa(snr,b));
-    send_chars(", SensorsMode=");
-    send_chars(ui8tox(data.sensors.bytes[0],b));
-    send_chars(", SensorsValues=");
-    send_chars(ui8tox(data.sensors.bytes[1],b));
     send_chars("\r\n");
 }
 void print_error(LorawanError_t err)
@@ -267,10 +247,10 @@ void print_error(LorawanError_t err)
 
 void Transmit_array(void)
 {
-    data.power=rep;
     RADIO_SetWatchdogTimeout(3000);
     print_array();
     radio_err=RADIO_Transmit(&data, sizeof(data));   
+    ((uint32_t*)(&data.snr))[0]++;
 }
 
 void compute_nco(void)
@@ -323,8 +303,6 @@ void main(void)
     TMR_ISR_Lora_Init();
     
     
-    data.uid=uid;
-    data.num=0;
     print_array();
     
 /*    send_chars("mui=");
@@ -344,7 +322,6 @@ void main(void)
 
     set_s("SPI_TRACE",&trace);
     set_s("INTERVAL",&dt);
-    set_s("REP",&rep);
     set_s("MODE",&mode);
     
     SX1276_Reset();
@@ -357,9 +334,8 @@ void main(void)
             RADIO_Init(radio_buffer, calibration_frequency);
             t0=SwTimerCreate();
             t1=SwTimerCreate();
-            rep--;
-            data.num=0;
-            data.power=rep;
+            *((uint32_t*)(&data.temperature))=uid;
+            *((uint32_t*)(&data.snr))=0;
             while(1)
             {
                 SwTimerSetTimeout(t0, MS_TO_TICKS(dt*1000));
@@ -483,37 +459,6 @@ void main(void)
                     insleep=1;
                     SLEEP();
                 }*/
-            }
-            break;
-        case MODE_NETWORK_SERVER:
-            send_chars("Network Server\r\n");
-
-            SysConfigSleep();
-            set_s("NETID",&NetID);
-            printVar("NetID=",PAR_UI32,&NetID,true,true);
-            calculate_NwkID();
-            get_nextDevAddr(DevAddr);
-//            LORAWAN_SetDeviceEui(&mui[2]);
-            number_of_devices=fill_devices();
-            printVar("Number of Devices=",PAR_UI8,&number_of_devices,false,true);
-            LORAWAN_Init(RxDataDone, RxJoinResponse);
-            set_s("JOIN0EUI",&JoinEui);
-            printVar("JoinEui=",PAR_EUI64,&JoinEui,true,true);
-            LORAWAN_SetDeviceEui(&JoinEui);
-            set_s("APPKEY",appkey);
-            LORAWAN_SetApplicationKey(appkey);
-            LORAWAN_SetActivationType(OTAA);
-            // Application main loop
-            DenyTransmit=0;
-            DenyReceive=0;
-            while (1)
-            {   
-                LORAWAN_Mainloop();        
-                // Stack management
-                if(loRa.macStatus.macState==IDLE)
-                {
-                    LORAWAN_Receive();
-                }
             }
             break;
     }
@@ -685,7 +630,6 @@ void LoRaWakeUp(void)
 void readAndSend(void)
 {
     data.temperature=getTemperature();
-    data.batLevel=getBatteryLevel();
     
     print_array();
     LorawanError_t err;
@@ -696,7 +640,6 @@ void readAndSend(void)
 //    if(err!=OK) print_error(err);
     err=LORAWAN_Send(CNF, 2, &data, sizeof(data));
     if(err!=OK) print_error(err);
-    data.num++;
 }
 /**
  End of File

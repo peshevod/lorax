@@ -480,12 +480,6 @@ void LORAWAN_TxDone(uint16_t timeOnAir)
                 Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)Channels[i].dutyCycle + 1) * ((uint32_t)loRa.prescaler) - 1);
             }
         }
-        else if(mode==MODE_NETWORK_SERVER)
-        {
-            loRa.macStatus.macState = IDLE;
-            Channels[i].channelTimer = ((uint32_t)timeOnAir) * (((uint32_t)Channels[i].dutyCycle + 1) * ((uint32_t)loRa.prescaler) - 1);
-        }
-
         if(SwTimerIsRunning(loRa.dutyCycleTimerId))
         {
             SwTimerStop(loRa.dutyCycleTimerId);
@@ -1079,11 +1073,11 @@ static void SetCallbackSoftwareTimers (void)
     SwTimerSetCallback(loRa.unconfirmedRetransmisionTimerId, UnconfirmedTransmissionCallback, 0);
     SwTimerSetCallback(loRa.abpJoinTimerId, UpdateJoinSuccessState, 0);
     SwTimerSetCallback(loRa.dutyCycleTimerId, DutyCycleCallback, 0);
-    for(uint8_t j=0;j<number_of_devices;j++)
+/*    for(uint8_t j=0;j<number_of_devices;j++)
     {
         SwTimerSetCallback(devices[j].sendJoinAccept1TimerId,LORAWAN_SendJoinAcceptCallback,j);
         SwTimerSetCallback(devices[j].sendWindow1TimerId,LORAWAN_SendDownAckCallback,j);
-    }
+    }*/
 }
 
 static void StopAllSoftwareTimers (void)
@@ -1426,17 +1420,7 @@ void ConfigureRadioTx(uint8_t dataRate, uint32_t freq)
     send_chars("\r\n");*/
     RADIO_SetOutputPower (txPower);
     
-    if(mode==MODE_NETWORK_SERVER)
-    {
-        RADIO_SetCRC(DISABLED);
-        RADIO_SetIQInverted(ENABLED); 
-    }
-    else
-    {
-        RADIO_SetCRC(ENABLED);
-        RADIO_SetIQInverted(DISABLED); 
-    }
-//    RADIO_SetCRC(ENABLED);
-//    RADIO_SetIQInverted(DISABLED);     
+    RADIO_SetCRC(ENABLED);
+    RADIO_SetIQInverted(DISABLED); 
 }
 

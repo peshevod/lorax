@@ -30,8 +30,8 @@ typedef union
 
 typedef struct
 {
-    uint32_t uid;
-    uint32_t num;
+//    uint32_t uid;
+//    uint32_t num;
     uint16_t temperature;
     uint8_t batLevel;
     uint8_t rssi;
